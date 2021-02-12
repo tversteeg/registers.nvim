@@ -44,7 +44,7 @@ local register_map = {
 	},
 }
 
-local buf, win
+local buf, win, register_lines
 
 -- Get the contents of the register
 local function register_contents(register_name)
@@ -91,6 +91,9 @@ local function update_view()
 	-- Get the width of the window to truncate the strings
 	local max_width = vim.api.nvim_win_get_width(win) - 2
 
+	local line_number = 1
+	register_lines = {}
+
 	-- Loop through all the types
 	for _, reg_type in ipairs(register_map) do
 		-- Loop through the separate registers of the type
@@ -110,12 +113,22 @@ local function update_view()
 
 				-- Truncate the line
 				result[#result + 1] = line:sub(1, max_width)
+
+				-- Keep track of the line numbers
+				register_lines[reg] = line_number
+				line_number = line_number + 1
 			end
 		end
 	end
 
 	-- Write the lines to the buffer
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, result)
+
+	-- Add the highlights
+	for i = 1, line_number do
+		vim.api.nvim_buf_add_highlight(buf, -1, "RegistersRegisterChar", i - 1, 0, 1)
+		vim.api.nvim_buf_add_highlight(buf, -1, "RegistersString", i - 1, 3, -1)
+	end
 
 	-- Don't allow the buffer to be modified
 	vim.api.nvim_buf_set_option(buf, "modifiable", false)
@@ -128,6 +141,37 @@ end
 
 -- Apply a register
 local function apply_register(register)
+	local sleep = true
+
+	-- If no register is passed use the currently selected line
+	if not register then
+		-- Get the currently selected line
+		local line = unpack(vim.api.nvim_win_get_cursor(win))
+
+		-- Find the matching register line
+		for reg, line_number in pairs(register_lines) do
+			if line_number == line then
+				register = reg
+				-- Don't sleep when we select it ourselves
+				sleep = false
+				break
+			end
+		end
+	end
+
+	-- Move the cursor to the register selected if applicable
+	if register_lines and register_lines[register] then
+		vim.api.nvim_win_set_cursor(win, {register_lines[register], 0})
+
+		-- Redraw so the line get's highlighted
+		vim.api.nvim_exec("silent! redraw", true)
+
+		if sleep then
+			-- Wait for a second before closing the window
+			vim.api.nvim_exec(("silent! sleep %d"):format(1), true)
+		end
+	end
+
 	-- Close the window
 	close_window()
 
@@ -140,6 +184,7 @@ local function set_mappings()
 	local mappings = {
 		-- Apply the currently selected register
 		["<CR>"] = "apply_register()",
+		["<ESC>"] = "close_window()",
 	}
 
 	-- Create a mapping for all the registers
