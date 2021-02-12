@@ -12,6 +12,12 @@ set cpo&vim
 " Command to run our plugin
 command! Registers lua require'registers'.registers()
 
+" Open the popup window when pressing <C-R> in insert mode
+inoremap <silent> <C-R> <C-O>:Registers<CR>
+
+" Open the popup window when pressing " in regular mode
+noremap <silent> " :Registers<CR>
+
 " Restore after
 let &cpo = s:save_cpo
 unlet s:save_cpo
