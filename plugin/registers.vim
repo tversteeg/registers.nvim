@@ -17,10 +17,10 @@ hi def link RegistersString String
 command! Registers lua require'registers'.registers()
 
 " Open the popup window when pressing <C-R> in insert mode
-inoremap <silent> <C-R> <C-O>:Registers<CR>
+inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers("insert")<CR>
 
 " Open the popup window when pressing " in regular mode
-noremap <silent> " :Registers<CR>
+noremap <silent> " <cmd>lua require'registers'.registers("normal")<CR>
 
 " Restore after
 let &cpo = s:save_cpo

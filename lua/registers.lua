@@ -1,15 +1,27 @@
 local register_map = {
 	{
+		type = "selection",
+		registers = {"*", "+"},
+	},
+	{
 		type = "unnamed",
 		registers = {"\""},
 	},
 	{
-		type = "numbered",
-		registers = {"0", "1", "2", "3", "4", "5", "7", "8", "9"},
-	},
-	{
 		type = "delete",
 		registers = {"-"},
+	},
+	{
+		type = "read-only",
+		registers = {":", ".", "%"},
+	},
+	{
+		type = "last search pattern",
+		registers = {"/"},
+	},
+	{
+		type = "numbered",
+		registers = {"0", "1", "2", "3", "4", "5", "7", "8", "9"},
 	},
 	{
 		type = "named",
@@ -17,10 +29,6 @@ local register_map = {
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 		},
-	},
-	{
-		type = "read-only",
-		registers = {":", ".", "%"},
 	},
 	{
 		type = "alternate buffer",
@@ -31,20 +39,12 @@ local register_map = {
 		registers = {"="},
 	},
 	{
-		type = "selection",
-		registers = {"*", "+"},
-	},
-	{
 		type = "black hole",
 		registers = {"_"},
 	},
-	{
-		type = "last search pattern",
-		registers = {"/"},
-	},
 }
 
-local buf, win, register_lines
+local buf, win, register_lines, invocation_mode
 
 -- Get the contents of the register
 local function register_contents(register_name)
@@ -155,9 +155,8 @@ end
 local function apply_register(register)
 	local sleep = true
 
-	local line
-
 	-- Try to find the line of the register
+	local line
 	if not register then
 		-- If no register is passed use the currently selected line
 
@@ -168,6 +167,9 @@ local function apply_register(register)
 		if line <= #register_lines then
 			sleep = false
 		end
+
+		-- Set the register
+		register = register_lines[line].register
 	else
 		-- Find the matching register line and get the line number
 		for i, register_line in ipairs(register_lines) do
@@ -195,8 +197,16 @@ local function apply_register(register)
 	-- Close the window
 	close_window()
 
-	-- Apply the register
-	vim.api.nvim_exec(("norm! \"%sP"):format(register), true)
+	-- Apply the register depending on in which mode the source window was
+	if invocation_mode == "insert" then
+		-- We are in insert mode so we can just put the buffer down
+		vim.api.nvim_put({register_contents(register)}, "", true, true)
+	elseif invocation_mode == "normal" then
+		-- Apply the register in normal mode
+		vim.api.nvim_exec(("norm! \"%sP"):format(register), true)
+	else
+		error("Unrecognized invocation mode: " .. invocation_mode)
+	end
 end
 
 -- Set the buffer keyboard mapping for the window
@@ -221,12 +231,18 @@ local function set_mappings()
 		silent = true,
 	}
 	for key, func in pairs(mappings) do
-		vim.api.nvim_buf_set_keymap(buf, "n", key, (":lua require\"registers\".%s<cr>"):format(func), map_options)
+		local call = ("<cmd>lua require\"registers\".%s<cr>"):format(func)
+		-- Map to both normal mode and insert mode for <C-R>
+		vim.api.nvim_buf_set_keymap(buf, "n", key, call, map_options)
+		vim.api.nvim_buf_set_keymap(buf, "i", key, call, map_options)
 	end
 end
 
 -- Spawn the window
-local function registers()
+local function registers(mode)
+	-- Keep track of the mode with which it's opened, can be nil
+	invocation_mode = mode or "normal"
+
 	open_window()
 	set_mappings()
 	update_view()
