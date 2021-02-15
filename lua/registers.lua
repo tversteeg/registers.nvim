@@ -1,3 +1,5 @@
+local config = require "config"
+
 local register_map = {
 	{
 		type = "selection",
@@ -53,6 +55,10 @@ end
 
 -- Build a map of all the lines
 local function read_registers()
+	-- Get the configuration
+	local cfg = config()
+
+	-- Reset the filled data
 	register_lines = {}
 
 	-- Loop through all the types
@@ -65,9 +71,9 @@ local function read_registers()
 			-- Skip empty registers
 			if #contents > 0 then
 				-- Display the whitespace of the line as whitespace
-				contents = contents:gsub("\t", "\\t")
-				-- Newlines have to be replaced
-				:gsub("[\n\r]", "⏎")
+				contents = contents:gsub("\t", cfg.tab_symbol)
+					-- Newlines have to be replaced
+					:gsub("[\n\r]", cfg.return_symbol)
 
 				-- Get the line with all the information
 				local line = string.format("%s: %s", reg, contents)
@@ -164,9 +170,7 @@ local function apply_register(register)
 		line = unpack(vim.api.nvim_win_get_cursor(win))
 
 		-- Don't sleep when we select it
-		if line <= #register_lines then
-			sleep = false
-		end
+		sleep = false
 
 		-- Set the register
 		register = register_lines[line].register
@@ -181,17 +185,15 @@ local function apply_register(register)
 	end
 
 	-- Move the cursor to the register selected if applicable
-	if line then
+	if sleep and config().register_key_sleep then
 		-- Move the cursor
 		vim.api.nvim_win_set_cursor(win, {line, 0})
 
 		-- Redraw so the line get's highlighted
 		vim.api.nvim_exec("silent! redraw", true)
 
-		if sleep then
-			-- Wait for some time before closing the window
-			vim.api.nvim_exec(("silent! sleep %d"):format(1), true)
-		end
+		-- Wait for some time before closing the window
+		vim.api.nvim_exec(("silent! sleep %d"):format(config().register_key_sleep), true)
 	end
 
 	-- Close the window
@@ -203,7 +205,7 @@ local function apply_register(register)
 		vim.api.nvim_put({register_contents(register)}, "", true, true)
 	elseif invocation_mode == "normal" then
 		-- Apply the register in normal mode
-		vim.api.nvim_exec(("norm! \"%sP"):format(register), true)
+		vim.api.nvim_exec(("norm! \"%s"):format(register), true)
 	else
 		error("Unrecognized invocation mode: " .. invocation_mode)
 	end
