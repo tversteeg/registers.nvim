@@ -14,16 +14,16 @@ hi def link RegistersRegisterChar Number
 hi def link RegistersString String
 
 " Command to run our plugin
-command! Registers lua require'registers'.registers()
+command! Registers lua require'registers'.registers(nil, true)
 
 " Open the popup window when pressing <C-R> in insert mode
-inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('insert')<CR>
+inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('<C-R>')<CR>
 
 " Open the popup window when pressing <C-R> in command mode
-cnoremap <silent> <C-R> <cmd>lua require'registers'.registers('command')<CR>
+cnoremap <silent> <C-R> <cmd>lua require'registers'.registers('<C-R>')<CR>
 
 " Open the popup window when pressing " in regular mode
-noremap <silent> " <cmd>lua require'registers'.registers('normal')<CR>
+noremap <silent> " <cmd>lua require'registers'.registers('"')<CR>
 
 " Restore after
 let &cpo = s:save_cpo

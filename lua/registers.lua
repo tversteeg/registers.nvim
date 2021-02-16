@@ -46,7 +46,7 @@ local register_map = {
 	},
 }
 
-local buf, win, register_lines, invocation_mode
+local buf, win, register_lines, invocation_key, apply_paste
 
 -- Get the contents of the register
 local function register_contents(register_name)
@@ -199,16 +199,16 @@ local function apply_register(register)
 	-- Close the window
 	close_window()
 
-	-- Apply the register depending on in which mode the source window was
-	if invocation_mode == "insert" then
-		-- We are in insert mode so we can just put the buffer down
-		vim.api.nvim_put({register_contents(register)}, "", true, true)
-	elseif invocation_mode == "normal" then
-		-- Apply the register in normal mode
-		vim.api.nvim_exec(("norm! \"%s"):format(register), true)
-	else
-		error("Unrecognized invocation mode: " .. invocation_mode)
+	-- Get the proper code for the original key pressed
+	local key = vim.api.nvim_replace_termcodes(invocation_key, true, true, true)
+
+	-- "Press" the key with the register key and paste it if applicable
+	local keys = key .. register
+	if apply_paste then
+		keys = keys .. "p"
 	end
+
+	vim.api.nvim_feedkeys(keys, vim.api.nvim_get_mode().mode, true)
 end
 
 -- Set the buffer keyboard mapping for the window
@@ -241,9 +241,11 @@ local function set_mappings()
 end
 
 -- Spawn the window
-local function registers(mode)
-	-- Keep track of the mode with which it's opened, can be nil
-	invocation_mode = mode or "normal"
+local function registers(key, paste)
+	-- Keep track of the key pressed to open the window
+	invocation_key = key or "\""
+	-- Whether to immediately paste the buffer
+	apply_paste = paste or false
 
 	open_window()
 	set_mappings()
