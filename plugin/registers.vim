@@ -20,7 +20,7 @@ command! Registers lua require'registers'.registers(nil, true)
 inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('<C-R>')<CR>
 
 " Open the popup window when pressing <C-R> in command mode
-cnoremap <silent> <C-R> <cmd>lua require'registers'.registers('<C-R>')<CR>
+"cnoremap <silent> <C-R> <cmd>lua require'registers'.registers('<C-R>')<CR>
 
 " Open the popup window when pressing " in regular mode
 noremap <silent> " <cmd>lua require'registers'.registers('"')<CR>
