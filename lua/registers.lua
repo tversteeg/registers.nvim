@@ -48,6 +48,15 @@ local register_map = {
 
 local buf, win, register_lines, invocation_key, apply_paste
 
+-- Convert a 0 to false and a 1 to true
+local function toboolean(val)
+	if val == 0 then
+		return false
+	else
+		return true
+	end
+end
+
 -- Get the contents of the register
 local function register_contents(register_name)
 	return vim.api.nvim_exec(("echo getreg(%q)"):format(register_name), true)
@@ -66,22 +75,22 @@ local function read_registers()
 		-- Loop through the separate registers of the type
 		for _, reg in ipairs(reg_type.registers) do
 			-- The contents of a register
-			local contents = register_contents(reg)
+			local raw = register_contents(reg)
 
 			-- Skip empty registers
-			if #contents > 0 then
+			if #raw > 0 then
 				-- Display the whitespace of the line as whitespace
-				contents = contents:gsub("\t", cfg.tab_symbol)
+				local contents = raw:gsub("\t", cfg.tab_symbol)
 					-- Newlines have to be replaced
 					:gsub("[\n\r]", cfg.return_symbol)
 
 				-- Get the line with all the information
 				local line = string.format("%s: %s", reg, contents)
 
-				-- Truncate the line
 				register_lines[#register_lines + 1] = {
 					register = reg,
 					line = line,
+					data = raw,
 				}
 			end
 		end
@@ -199,16 +208,48 @@ local function apply_register(register)
 	-- Close the window
 	close_window()
 
-	-- Get the proper code for the original key pressed
-	local key = vim.api.nvim_replace_termcodes(invocation_key, true, true, true)
+	-- Get the current mode in the window
+	local mode = vim.api.nvim_get_mode().mode
 
-	-- "Press" the key with the register key and paste it if applicable
-	local keys = key .. register
-	if apply_paste then
-		keys = keys .. "p"
+	-- Get the map used with the key pressed
+	local map
+	for _, keymap in ipairs(vim.api.nvim_get_keymap(mode)) do
+		if keymap.lhs == invocation_key then
+			map = {
+				-- The string that's mapped
+				rhs = keymap.rhs,
+				-- The options as they need to be passed
+				options = {
+					noremap = toboolean(keymap.noremap),
+					script = toboolean(keymap.script),
+					silent = toboolean(keymap.silent),
+					nowait = toboolean(keymap.nowait),
+					expr = toboolean(keymap.expr),
+				},
+			}
+		end
+	end
+	if not map then
+		error("Invocation key is not mapped")
 	end
 
-	vim.api.nvim_feedkeys(keys, vim.api.nvim_get_mode().mode, true)
+	if invocation_key == "<C-R>" then
+		-- Split the newline characters into multiple lines
+		local lines = vim.split(register_lines[line].data, "\n")
+
+		-- If <C-R> is used from a buffer, just paste the contents of the register
+		vim.api.nvim_put(lines, "b", true, true)
+	else
+		-- Get the proper code for the original key pressed
+		local key = vim.api.nvim_replace_termcodes(invocation_key, true, true, true)
+
+		-- "Press" the key with the register key and paste it if applicable
+		local keys = key .. register
+		if apply_paste then
+			keys = keys .. "p"
+		end
+		vim.api.nvim_feedkeys(keys, mode, true)
+	end
 end
 
 -- Set the buffer keyboard mapping for the window

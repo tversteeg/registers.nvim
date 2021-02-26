@@ -17,7 +17,7 @@ hi def link RegistersString String
 command! Registers lua require'registers'.registers(nil, true)
 
 " Open the popup window when pressing <C-R> in insert mode
-inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('<C-R>')<CR>
+inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('<lt>C-R>')<CR>
 
 " Open the popup window when pressing <C-R> in command mode
 "cnoremap <silent> <C-R> <cmd>lua require'registers'.registers('<C-R>')<CR>
