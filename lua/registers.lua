@@ -194,7 +194,7 @@ local function apply_register(register)
 	end
 
 	-- Move the cursor to the register selected if applicable
-	if sleep and config().register_key_sleep then
+	if sleep and line and config().register_key_sleep then
 		-- Move the cursor
 		vim.api.nvim_win_set_cursor(win, {line, 0})
 
@@ -207,6 +207,11 @@ local function apply_register(register)
 
 	-- Close the window
 	close_window()
+
+	-- Don't try to apply the register when it's empty
+	if not line then
+		return
+	end
 
 	-- Get the current mode in the window
 	local mode = vim.api.nvim_get_mode().mode
