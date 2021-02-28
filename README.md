@@ -12,6 +12,12 @@ Requires NeoVim 0.5+.
 use "tversteeg/registers.nvim"
 ```
 
+### Paq
+
+```lua
+paq "tversteeg/registers.nvim"
+```
+
 ### Plug
 
 ```vim
