@@ -81,7 +81,9 @@ local function read_registers()
 			if #raw > 0 then
 				-- Display the whitespace of the line as whitespace
 				local contents = raw:gsub("\t", cfg.tab_symbol)
-					-- Newlines have to be replaced
+					-- Replace spaces
+					:gsub(" ", cfg.space_symbol)
+					-- Replace newlines
 					:gsub("[\n\r]", cfg.return_symbol)
 
 				-- Get the line with all the information
@@ -107,6 +109,8 @@ local function open_window()
 
 	-- Remove the buffer when the window is closed
 	vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
+	-- Highlight special characters
+	vim.api.nvim_buf_set_option(buf, "filetype", "registers")
 
 	-- Get dimensions
 	local width = vim.api.nvim_get_option("columns")
@@ -150,12 +154,6 @@ local function update_view()
 
 	-- Write the lines to the buffer
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-
-	-- Add the highlights
-	for i = 1, #register_lines do
-		vim.api.nvim_buf_add_highlight(buf, -1, "RegistersRegisterChar", i - 1, 0, 1)
-		vim.api.nvim_buf_add_highlight(buf, -1, "RegistersString", i - 1, 3, -1)
-	end
 
 	-- Don't allow the buffer to be modified
 	vim.api.nvim_buf_set_option(buf, "modifiable", false)

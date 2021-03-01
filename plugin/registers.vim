@@ -9,10 +9,6 @@ let s:save_cpo = &cpo
 " Reset them to defaults
 set cpo&vim
 
-" Set the theme variables
-hi def link RegistersRegisterChar Number
-hi def link RegistersString String
-
 " Command to run our plugin
 command! Registers lua require'registers'.registers(nil, true)
 
