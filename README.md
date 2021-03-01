@@ -4,6 +4,12 @@ Show register content when you try to access it in NeoVim. Written in Lua.
 
 Requires NeoVim 0.5+.
 
+## Features
+
+- No configuration required, automatically maps to <kbd>"</kbd> and <kbd>Ctrl</kbd><kbd>R</kbd>
+- Non-obtrusive, won't influence you're workflow
+- Minimal interface, no visual noise
+
 ## Install
 
 ### Packer
@@ -32,7 +38,7 @@ call dein#add('tversteeg/registers.nvim')
 
 ## Use
 
-Press <kbd>"</kbd> in normal mode or <kbd>Ctrl</kbd><kbd>R</kbd> in insert mode to show a popup window with the registers and their values.
+Open the window with `:Registers` or press <kbd>"</kbd> in normal mode or <kbd>Ctrl</kbd><kbd>R</kbd> in insert mode to show a popup window with the registers and their values.
 Empty registers are not shown by default.
 
 ![insert](docs/insert.png?raw=true)
