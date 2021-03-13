@@ -67,6 +67,9 @@ local function read_registers()
 	-- Get the configuration
 	local cfg = config()
 
+	-- Keep track of all the registers without any content
+	local empty_registers = {}
+
 	-- Reset the filled data
 	register_lines = {}
 
@@ -94,8 +97,23 @@ local function read_registers()
 					line = line,
 					data = raw,
 				}
+			elseif cfg.show_empty_registers == 1 then
+				-- Keep track of the empty registers
+				empty_registers[#empty_registers + 1] = reg
 			end
 		end
+	end
+
+	-- Add another line with the empty registers if the option is set
+	if #empty_registers > 0 then
+		local line = "Empty:"
+		for _, reg in ipairs(empty_registers) do
+			line = ("%s %s"):format(line, reg)
+		end
+
+		register_lines[#register_lines + 1] = {
+			line = line,
+		}
 	end
 end
 
@@ -116,8 +134,13 @@ local function open_window()
 	local width = vim.api.nvim_get_option("columns")
 	local height = vim.api.nvim_get_option("lines")
 
+	-- Get the current line position
+	local current_line = unpack(vim.api.nvim_win_get_cursor(0))
+
 	-- Calculate the floating window size
-	local win_height = math.min(#register_lines, math.ceil(height * 0.8 - 4))
+	local win_height = math.min(#register_lines,
+		-- If the whole buffer doesn't fit, use the size from the current line to the height
+		math.min(height - current_line - 2, math.ceil(height * 0.8 - 4)))
 	local win_width = math.ceil(width * 0.8)
 
 	-- Set some options

@@ -5,5 +5,6 @@ return function()
 		space_symbol = vim.g.registers_space_symbol or " ",
 		return_symbol = vim.g.registers_return_symbol or "⏎",
 		register_key_sleep = vim.g.registers_register_key_sleep or 0,
+		show_empty_registers = vim.g.registers_show_empty_registers or 1,
 	}
 end
