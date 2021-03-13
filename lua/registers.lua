@@ -134,13 +134,13 @@ local function open_window()
 	local width = vim.api.nvim_get_option("columns")
 	local height = vim.api.nvim_get_option("lines")
 
-	-- Get the current line position
-	local current_line = unpack(vim.api.nvim_win_get_cursor(0))
+	-- Get the relative cursor line
+	local win_line = vim.api.nvim_call_function("winline", {})
 
 	-- Calculate the floating window size
 	local win_height = math.min(#register_lines,
 		-- If the whole buffer doesn't fit, use the size from the current line to the height
-		math.min(height - current_line - 2, math.ceil(height * 0.8 - 4)))
+		math.min(height - win_line - 2, math.ceil(height * 0.8 - 4)))
 	local win_width = math.ceil(width * 0.8)
 
 	-- Set some options
