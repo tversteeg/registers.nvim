@@ -19,7 +19,7 @@ inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('<lt>C-R>')<C
 "cnoremap <silent> <C-R> <cmd>lua require'registers'.registers('<C-R>')<CR>
 
 " Open the popup window when pressing " in regular mode
-noremap <silent> " <cmd>lua require'registers'.registers('"')<CR>
+nnoremap <silent> " <cmd>lua require'registers'.registers('"')<CR>
 
 " Restore after
 let &cpo = s:save_cpo
