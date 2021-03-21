@@ -126,9 +126,11 @@ local function open_window()
 	buf = vim.api.nvim_create_buf(false, true)
 
 	-- Remove the buffer when the window is closed
-	vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
+	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 	-- Highlight special characters
 	vim.api.nvim_buf_set_option(buf, "filetype", "registers")
+    -- Disable automatic completion throwing an error in coc.nvim
+	vim.api.nvim_buf_set_option(buf, "omnifunc", "")
 
 	-- Get dimensions
 	local width = vim.api.nvim_get_option("columns")
