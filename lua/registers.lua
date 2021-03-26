@@ -46,7 +46,7 @@ local register_map = {
 	},
 }
 
-local buf, win, register_lines, invocation_key, apply_paste
+local buf, win, register_lines, invocation_key, apply_paste, operator_count
 
 -- Convert a 0 to false and a 1 to true
 local function toboolean(val)
@@ -272,7 +272,7 @@ local function apply_register(register)
 		local key = vim.api.nvim_replace_termcodes(invocation_key, true, true, true)
 
 		-- "Press" the key with the register key and paste it if applicable
-		local keys = key .. register
+		local keys = operator_count .. key .. register
 		if apply_paste then
 			keys = keys .. "p"
 		end
@@ -321,6 +321,8 @@ local function registers(key, paste)
 	invocation_key = key or "\""
 	-- Whether to immediately paste the buffer
 	apply_paste = paste or false
+    -- Keep track of the count that's used to invoke the window so it can be applied again
+    operator_count = vim.api.nvim_get_vvar("count1")
 
 	open_window()
 	set_mappings()
