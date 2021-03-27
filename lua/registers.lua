@@ -308,11 +308,17 @@ local function set_mappings()
 		vim.api.nvim_buf_set_keymap(buf, "i", key, call, map_options)
 	end
 
-	-- Map <c-j> & <c-k> for moving up and down
+	-- Map <c-k> & <c-j> for moving up and down
 	vim.api.nvim_buf_set_keymap(buf, "n", "<c-k>", "<up>", map_options)
 	vim.api.nvim_buf_set_keymap(buf, "i", "<c-k>", "<up>", map_options)
 	vim.api.nvim_buf_set_keymap(buf, "n", "<c-j>", "<down>", map_options)
 	vim.api.nvim_buf_set_keymap(buf, "i", "<c-j>", "<down>", map_options)
+
+	-- Map <c-p> & <c-n> for moving up and down
+	vim.api.nvim_buf_set_keymap(buf, "n", "<c-p>", "<up>", map_options)
+	vim.api.nvim_buf_set_keymap(buf, "i", "<c-p>", "<up>", map_options)
+	vim.api.nvim_buf_set_keymap(buf, "n", "<c-n>", "<down>", map_options)
+	vim.api.nvim_buf_set_keymap(buf, "i", "<c-n>", "<down>", map_options)
 end
 
 -- Spawn the window
