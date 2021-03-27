@@ -10,16 +10,16 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 " Command to run our plugin
-command! Registers lua require'registers'.registers(nil, true)
+command! Registers lua require'registers'.registers()
 
 " Open the popup window when pressing <C-R> in insert mode
-inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('<lt>C-R>')<CR>
-
-" Open the popup window when pressing <C-R> in command mode
-"cnoremap <silent> <C-R> <cmd>lua require'registers'.registers('<C-R>')<CR>
+inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('i')<CR>
 
 " Open the popup window when pressing " in regular mode
-nnoremap <silent> " <cmd>lua require'registers'.registers('"')<CR>
+nnoremap <silent> " <cmd>lua require'registers'.registers('n')<CR>
+
+" Open the popup window when pressing " in insert visual
+vnoremap <silent> " <esc><cmd>lua require'registers'.registers('v')<CR>
 
 " Restore after
 let &cpo = s:save_cpo

@@ -46,7 +46,7 @@ local register_map = {
 	},
 }
 
-local buf, win, register_lines, invocation_key, apply_paste, operator_count
+local buf, win, register_lines, invocation_mode, operator_count
 
 -- Convert a 0 to false and a 1 to true
 local function toboolean(val)
@@ -236,47 +236,39 @@ local function apply_register(register)
 		return
 	end
 
-	-- Get the current mode in the window
-	local mode = vim.api.nvim_get_mode().mode
-
-	-- Get the map used with the key pressed
-	local map
-	for _, keymap in ipairs(vim.api.nvim_get_keymap(mode)) do
-		if keymap.lhs == invocation_key then
-			map = {
-				-- The string that's mapped
-				rhs = keymap.rhs,
-				-- The options as they need to be passed
-				options = {
-					noremap = toboolean(keymap.noremap),
-					script = toboolean(keymap.script),
-					silent = toboolean(keymap.silent),
-					nowait = toboolean(keymap.nowait),
-					expr = toboolean(keymap.expr),
-				},
-			}
-		end
-	end
-	if not map then
-		error("Invocation key is not mapped")
-	end
-
-	if invocation_key == "<C-R>" then
+    -- Handle insert mode differently
+	if invocation_mode == "i" then
 		-- Split the newline characters into multiple lines
 		local lines = vim.split(register_lines[line].data, "\n")
 
-		-- If <C-R> is used from a buffer, just paste the contents of the register
+		-- If the screen is invoked from inset mode, just paste the contents of the register
 		vim.api.nvim_put(lines, "b", true, true)
 	else
+        -- Get the current mode in the window
+        local current_mode = vim.api.nvim_get_mode().mode
+
 		-- Get the proper code for the original key pressed
-		local key = vim.api.nvim_replace_termcodes(invocation_key, true, true, true)
+		local key = vim.api.nvim_replace_termcodes("\"", true, true, true)
+
+        -- Define the keys pressed based on the mode
+        local keys
+        if invocation_mode == "n" then
+            -- When the popup is opened with the " key in normal mode
+            -- Allow 10".. using the stored operator count
+            keys = operator_count .. key .. register
+        elseif invocation_mode == "v" then
+            -- When the popup is opened with the " key in visual mode
+            -- Reset the visual selection
+            keys = "gv" .. key .. register
+        else
+            -- When the popup is opened without any mode passed, i.e. directly from the
+            -- function call
+            -- Automatically paste it
+            keys = key .. register .. "p"
+        end
 
 		-- "Press" the key with the register key and paste it if applicable
-		local keys = operator_count .. key .. register
-		if apply_paste then
-			keys = keys .. "p"
-		end
-		vim.api.nvim_feedkeys(keys, mode, true)
+		vim.api.nvim_feedkeys(keys, current_mode, true)
 	end
 end
 
@@ -306,6 +298,7 @@ local function set_mappings()
 		-- Map to both normal mode and insert mode for <C-R>
 		vim.api.nvim_buf_set_keymap(buf, "n", key, call, map_options)
 		vim.api.nvim_buf_set_keymap(buf, "i", key, call, map_options)
+		vim.api.nvim_buf_set_keymap(buf, "v", key, call, map_options)
 	end
 
 	-- Map <c-k> & <c-j> for moving up and down
@@ -322,13 +315,11 @@ local function set_mappings()
 end
 
 -- Spawn the window
-local function registers(key, paste)
-	-- Keep track of the key pressed to open the window
-	invocation_key = key or "\""
-	-- Whether to immediately paste the buffer
-	apply_paste = paste or false
+local function registers(mode)
     -- Keep track of the count that's used to invoke the window so it can be applied again
     operator_count = vim.api.nvim_get_vvar("count1")
+    -- Keep track of the mode that's used to open the popup
+    invocation_mode = mode
 
 	open_window()
 	set_mappings()
