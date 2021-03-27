@@ -59,7 +59,7 @@ end
 
 -- Get the contents of the register
 local function register_contents(register_name)
-	return vim.api.nvim_exec(("echo getreg(%q)"):format(register_name), true)
+  return vim.api.nvim_exec(("echo getreg(%q, 1)"):format(register_name), true)
 end
 
 -- Build a map of all the lines
