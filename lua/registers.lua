@@ -113,6 +113,7 @@ local function read_registers()
 
 		register_lines[#register_lines + 1] = {
 			line = line,
+            ignore = true,
 		}
 	end
 end
@@ -204,8 +205,19 @@ local function apply_register(register)
 		-- Don't sleep when we select it
 		sleep = false
 
-		-- Set the register
-		register = register_lines[line].register
+        -- Find the line matching the cursor
+        local register_line = register_lines[line]
+
+        -- If a non-register line is selected just close the window and do nothing
+        if register_line.ignore then
+            -- Close the window
+            close_window()
+
+            return
+        end
+
+        -- Set the register from the line selected
+        register = register_line.register
 	else
 		-- Find the matching register line and get the line number
 		for i, register_line in ipairs(register_lines) do
