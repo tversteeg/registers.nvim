@@ -266,8 +266,14 @@ local function apply_register(register)
         local keys
         if invocation_mode == "n" then
             -- When the popup is opened with the " key in normal mode
-            -- Allow 10".. using the stored operator count
-            keys = operator_count .. key .. register
+            if operator_count > 0 then
+                -- Allow 10".. using the stored operator count
+                keys = operator_count .. key .. register
+            else
+                -- Don't prepend the count if it's not set, because that will
+                -- influence the behavior of the operator following
+                keys = key .. register
+            end
         elseif invocation_mode == "v" then
             -- When the popup is opened with the " key in visual mode
             -- Reset the visual selection
@@ -329,7 +335,7 @@ end
 -- Spawn the window
 local function registers(mode)
     -- Keep track of the count that's used to invoke the window so it can be applied again
-    operator_count = vim.api.nvim_get_vvar("count1")
+    operator_count = vim.api.nvim_get_vvar("count")
     -- Keep track of the mode that's used to open the popup
     invocation_mode = mode
 
