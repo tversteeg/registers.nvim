@@ -243,14 +243,14 @@ local function apply_register(register)
 	-- Close the window
 	close_window()
 
-	-- Don't try to apply the register when it's empty
-	if not line then
-		return
-	end
-
     -- Handle insert mode differently
 	if invocation_mode == "i" then
-		-- Split the newline characters into multiple lines
+        -- Don't try to apply the register when it's empty
+        if not line then
+            return
+        end
+
+        -- Split the newline characters into multiple lines
 		local lines = vim.split(register_lines[line].data, "\n")
 
 		-- If the screen is invoked from inset mode, just paste the contents of the register
