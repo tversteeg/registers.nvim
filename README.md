@@ -38,11 +38,18 @@ call dein#add('tversteeg/registers.nvim')
 
 ## Use
 
-Open the window with `:Registers` or press <kbd>"</kbd> in normal mode or <kbd>Ctrl</kbd><kbd>R</kbd> in insert mode to show a popup window with the registers and their values.
-Empty registers are not shown by default.
+The popup window showing the registers and their values can be opened in one of the following ways:
+
+- Call `:Registers`
+- Press <kbd>"</kbd> in _normal_ or _visual_ mode
+
+![normal](docs/normal.png?raw=true)
+
+- Press <kbd>Ctrl</kbd><kbd>R</kbd> in _insert_ mode
 
 ![insert](docs/insert.png?raw=true)
-![normal](docs/normal.png?raw=true)
+
+Empty registers are not shown by default.
 
 ### Navigate
 
