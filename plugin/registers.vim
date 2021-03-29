@@ -13,7 +13,7 @@ set cpo&vim
 command! Registers lua require'registers'.registers()
 
 " Open the popup window when pressing <C-R> in insert mode
-inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('i')<CR>
+inoremap <silent> <C-R><leader> <C-O><cmd>lua require'registers'.registers('i')<CR>
 
 " Open the popup window when pressing " in regular mode
 nnoremap <silent> " <cmd>lua require'registers'.registers('n')<CR>
