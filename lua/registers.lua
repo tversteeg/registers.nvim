@@ -245,6 +245,16 @@ local function apply_register(register)
 
     -- Handle insert mode differently
 	if invocation_mode == "i" then
+        -- Handle the special case for the expression register
+        if register == "=" then
+            -- Get the proper keycode for <C-R>
+            local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
+
+            -- Opening the expression register in normal mode magically works
+            -- I have no idea why..
+            vim.api.nvim_feedkeys(key .. "=", "n", true)
+        end
+
         -- Don't try to apply the register when it's empty
         if not line then
             return
@@ -256,34 +266,31 @@ local function apply_register(register)
 		-- If the screen is invoked from inset mode, just paste the contents of the register
 		vim.api.nvim_put(lines, "b", true, true)
 	else
-        -- Get the current mode in the window
-        local current_mode = vim.api.nvim_get_mode().mode
-
-		-- Get the proper code for the original key pressed
-		local key = vim.api.nvim_replace_termcodes("\"", true, true, true)
-
         -- Define the keys pressed based on the mode
         local keys
         if invocation_mode == "n" then
             -- When the popup is opened with the " key in normal mode
             if operator_count > 0 then
                 -- Allow 10".. using the stored operator count
-                keys = operator_count .. key .. register
+                keys = operator_count .. "\"" .. register
             else
                 -- Don't prepend the count if it's not set, because that will
                 -- influence the behavior of the operator following
-                keys = key .. register
+                keys = "\"" .. register
             end
         elseif invocation_mode == "v" then
             -- When the popup is opened with the " key in visual mode
             -- Reset the visual selection
-            keys = "gv" .. key .. register
+            keys = "gv\"" .. register
         else
             -- When the popup is opened without any mode passed, i.e. directly from the
             -- function call
             -- Automatically paste it
-            keys = key .. register .. "p"
+            keys = "\"" .. register .. "p"
         end
+
+        -- Get the current mode in the window
+        local current_mode = vim.api.nvim_get_mode().mode
 
 		-- "Press" the key with the register key and paste it if applicable
 		vim.api.nvim_feedkeys(keys, current_mode, true)
