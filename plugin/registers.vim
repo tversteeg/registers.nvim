@@ -18,8 +18,8 @@ inoremap <silent> <C-R> <C-O><cmd>lua require'registers'.registers('i')<CR>
 " Open the popup window when pressing " in regular mode
 nnoremap <silent> " <cmd>lua require'registers'.registers('n')<CR>
 
-" Open the popup window when pressing " in insert visual
-vnoremap <silent> " <esc><cmd>lua require'registers'.registers('v')<CR>
+" Open the popup window when pressing " in visual mode
+xnoremap <silent> " <esc><cmd>lua require'registers'.registers('v')<CR>
 
 " Restore after
 let &cpo = s:save_cpo
