@@ -1,4 +1,4 @@
-local config = require "config"
+local config = require "registers.config"
 
 local register_map = {
 	{
