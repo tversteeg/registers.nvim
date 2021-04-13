@@ -181,6 +181,13 @@ local function update_view()
 	-- Write the lines to the buffer
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 
+  vim.cmd(
+    string.format(
+      "autocmd WinLeave,BufLeave,BufDelete <buffer=%s> ++once ++nested lua require('registers').close_window()",
+      buf
+    )
+  )
+
 	-- Don't allow the buffer to be modified
 	vim.api.nvim_buf_set_option(buf, "modifiable", false)
 end
