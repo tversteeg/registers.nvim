@@ -147,12 +147,12 @@ local function open_window()
 	local win_width = math.ceil(width * 0.8)
 
     -- Set window at cursor position, unless the cursor is at the bottom of the buffer
-    local opts_row = 1
-    if (win_height <10)
-    then
-        win_height = 10
-        opts_row = win_line - 11
-    end
+	local opts_row = 1
+	if (win_height <10)
+	then
+		win_height = 10
+		opts_row = win_line - 11
+	end
 
 	-- Set some options
 	local opts = {
