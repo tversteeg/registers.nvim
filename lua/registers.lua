@@ -163,6 +163,7 @@ local function open_window()
 	-- Register an autocommand to close window if focus is lost
 	vim.cmd([[augroup registers_focus_lost]])
 	vim.cmd([[autocmd! registers_focus_lost BufLeave <buffer> lua require('registers').close_window()]])
+	vim.cmd([[augroup END]])
 
 	-- Highlight the cursor line
 	vim.api.nvim_win_set_option(win, "cursorline", true)
