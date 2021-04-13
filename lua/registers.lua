@@ -191,7 +191,13 @@ end
 
 -- Close the window
 local function close_window()
+    -- Do nothing when there's no window
+    if not win then
+        return
+    end
+
 	vim.api.nvim_win_close(win, true)
+    win = nil
 end
 
 -- Apply a register
@@ -349,6 +355,9 @@ local function registers(mode)
     operator_count = vim.api.nvim_get_vvar("count")
     -- Keep track of the mode that's used to open the popup
     invocation_mode = mode
+
+    -- Close the old window if it's still open
+    close_window()
 
 	open_window()
 	set_mappings()
