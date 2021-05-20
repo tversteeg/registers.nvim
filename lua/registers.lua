@@ -59,7 +59,7 @@ end
 
 -- Get the contents of the register
 local function register_contents(register_name)
-  return vim.api.nvim_exec(("echo getreg(%q, 1)"):format(register_name), true)
+  return vim.api.nvim_call_function("getreg", {register_name, 1})
 end
 
 -- Build a map of all the lines
@@ -171,9 +171,9 @@ local function open_window()
 	win = vim.api.nvim_open_win(buf, true, opts)
 
 	-- Register an autocommand to close window if focus is lost
-	vim.cmd([[augroup registers_focus_lost]])
-	vim.cmd([[autocmd! registers_focus_lost BufLeave <buffer> lua require('registers').close_window()]])
-	vim.cmd([[augroup END]])
+	vim.api.nvim_command([[augroup registers_focus_lost]])
+	vim.api.nvim_command([[autocmd! registers_focus_lost BufLeave <buffer> lua require('registers').close_window()]])
+	vim.api.nvim_command([[augroup END]])
 
 	-- Highlight the cursor line
 	vim.api.nvim_win_set_option(win, "cursorline", true)
