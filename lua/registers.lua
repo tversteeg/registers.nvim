@@ -46,7 +46,7 @@ local register_map = {
 	},
 }
 
-local buf, win, register_lines, invocation_mode, operator_count
+local buf, win, register_lines, invocation_mode, operator_count, cursor_is_last
 
 -- Convert a 0 to false and a 1 to true
 local function toboolean(val)
@@ -59,7 +59,7 @@ end
 
 -- Get the contents of the register
 local function register_contents(register_name)
-  return vim.api.nvim_call_function("getreg", {register_name, 1})
+	return vim.api.nvim_call_function("getreg", {register_name, 1})
 end
 
 -- Build a map of all the lines
@@ -113,7 +113,7 @@ local function read_registers()
 
 		register_lines[#register_lines + 1] = {
 			line = line,
-            ignore = true,
+			ignore = true,
 		}
 	end
 end
@@ -130,7 +130,7 @@ local function open_window()
 	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 	-- Highlight special characters
 	vim.api.nvim_buf_set_option(buf, "filetype", "registers")
-    -- Disable automatic completion throwing an error in coc.nvim
+	-- Disable automatic completion throwing an error in coc.nvim
 	vim.api.nvim_buf_set_option(buf, "omnifunc", "")
 
 	-- Get dimensions
@@ -152,8 +152,8 @@ local function open_window()
 
 	local opts_row = 1
 	if win_height < user_scrolloff then
-			win_height = user_scrolloff
-			opts_row = win_line - user_scrolloff
+		win_height = user_scrolloff
+		opts_row = win_line - user_scrolloff
 	end
 
 	-- Set some options
@@ -202,13 +202,13 @@ end
 
 -- Close the window
 local function close_window()
-    -- Do nothing when there's no window
-    if not win then
-        return
-    end
+	-- Do nothing when there's no window
+	if not win then
+		return
+	end
 
 	vim.api.nvim_win_close(win, true)
-    win = nil
+	win = nil
 end
 
 -- Apply a register
@@ -226,19 +226,19 @@ local function apply_register(register)
 		-- Don't sleep when we select it
 		sleep = false
 
-        -- Find the line matching the cursor
-        local register_line = register_lines[line]
+		-- Find the line matching the cursor
+		local register_line = register_lines[line]
 
-        -- If a non-register line is selected just close the window and do nothing
-        if register_line.ignore then
-            -- Close the window
-            close_window()
+		-- If a non-register line is selected just close the window and do nothing
+		if register_line.ignore then
+			-- Close the window
+			close_window()
 
-            return
-        end
+			return
+		end
 
-        -- Set the register from the line selected
-        register = register_line.register
+		-- Set the register from the line selected
+		register = register_line.register
 	else
 		-- Find the matching register line and get the line number
 		for i, register_line in ipairs(register_lines) do
@@ -264,54 +264,55 @@ local function apply_register(register)
 	-- Close the window
 	close_window()
 
-    -- Handle insert mode differently
+	-- Handle insert mode differently
 	if invocation_mode == "i" then
-        -- Handle the special case for the expression register
-        if register == "=" then
-            -- Get the proper keycode for <C-R>
-            local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
+		-- Handle the special case for the expression register
+		if register == "=" then
+			-- Get the proper keycode for <C-R>
+			local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
 
-            -- Opening the expression register in normal mode magically works
-            -- I have no idea why..
-            vim.api.nvim_feedkeys(key .. "=", "n", true)
-        end
+			-- Opening the expression register in normal mode magically works
+			-- I have no idea why..
+			vim.api.nvim_feedkeys(key .. "=", "n", true)
+		end
 
-        -- Don't try to apply the register when it's empty
-        if not line then
-            return
-        end
+		-- Don't try to apply the register when it's empty
+		if not line then
+			return
+		end
 
-        -- Split the newline characters into multiple lines
+		-- Split the newline characters into multiple lines
 		local lines = vim.split(register_lines[line].data, "\n")
 
-		-- If the screen is invoked from inset mode, just paste the contents of the register
-		vim.api.nvim_put(lines, "b", true, true)
+		-- If the screen is invoked from insert mode, just paste the contents of the register
+		-- Paste the content behind the cursor if it's at the end of the line, otherwise paste it in front
+		vim.api.nvim_put(lines, "b", cursor_is_last, true)
 	else
-        -- Define the keys pressed based on the mode
-        local keys
-        if invocation_mode == "n" then
-            -- When the popup is opened with the " key in normal mode
-            if operator_count > 0 then
-                -- Allow 10".. using the stored operator count
-                keys = operator_count .. "\"" .. register
-            else
-                -- Don't prepend the count if it's not set, because that will
-                -- influence the behavior of the operator following
-                keys = "\"" .. register
-            end
-        elseif invocation_mode == "v" then
-            -- When the popup is opened with the " key in visual mode
-            -- Reset the visual selection
-            keys = "gv\"" .. register
-        else
-            -- When the popup is opened without any mode passed, i.e. directly from the
-            -- function call
-            -- Automatically paste it
-            keys = "\"" .. register .. "p"
-        end
+		-- Define the keys pressed based on the mode
+		local keys
+		if invocation_mode == "n" then
+			-- When the popup is opened with the " key in normal mode
+			if operator_count > 0 then
+				-- Allow 10".. using the stored operator count
+				keys = operator_count .. "\"" .. register
+			else
+				-- Don't prepend the count if it's not set, because that will
+				-- influence the behavior of the operator following
+				keys = "\"" .. register
+			end
+		elseif invocation_mode == "v" then
+			-- When the popup is opened with the " key in visual mode
+			-- Reset the visual selection
+			keys = "gv\"" .. register
+		else
+			-- When the popup is opened without any mode passed, i.e. directly from the
+			-- function call
+			-- Automatically paste it
+			keys = "\"" .. register .. "p"
+		end
 
-        -- Get the current mode in the window
-        local current_mode = vim.api.nvim_get_mode().mode
+		-- Get the current mode in the window
+		local current_mode = vim.api.nvim_get_mode().mode
 
 		-- "Press" the key with the register key and paste it if applicable
 		vim.api.nvim_feedkeys(keys, current_mode, true)
@@ -362,13 +363,17 @@ end
 
 -- Spawn the window
 local function registers(mode)
-    -- Keep track of the count that's used to invoke the window so it can be applied again
-    operator_count = vim.api.nvim_get_vvar("count")
-    -- Keep track of the mode that's used to open the popup
-    invocation_mode = mode
+	-- Keep track of the count that's used to invoke the window so it can be applied again
+	operator_count = vim.api.nvim_get_vvar("count")
+	-- Keep track of the mode that's used to open the popup
+	invocation_mode = mode
+	-- Keep track of whether the cursor is at the last character of the line in insert mode
+	if mode == "i" then
+		cursor_is_last = vim.api.nvim_call_function("col", {"."}) == vim.api.nvim_call_function("col", {"$"}) - 1
+	end
 
-    -- Close the old window if it's still open
-    close_window()
+	-- Close the old window if it's still open
+	close_window()
 
 	open_window()
 	set_mappings()
