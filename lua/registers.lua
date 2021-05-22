@@ -255,10 +255,10 @@ local function apply_register(register)
 		vim.api.nvim_win_set_cursor(win, {line, 0})
 
 		-- Redraw so the line get's highlighted
-		vim.api.nvim_exec("silent! redraw", true)
+		vim.api.nvim_command("silent! redraw")
 
 		-- Wait for some time before closing the window
-		vim.api.nvim_exec(("silent! sleep %d"):format(config().register_key_sleep), true)
+		vim.api.nvim_command(("silent! sleep %d"):format(config().register_key_sleep))
 	end
 
 	-- Close the window
