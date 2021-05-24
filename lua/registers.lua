@@ -150,6 +150,12 @@ local function open_window()
 	-- Too close is what the user set as scrolloff
 	local user_scrolloff = vim.api.nvim_get_option('scrolloff');
 
+	-- When the user picks a high number they want to center the mouse, which will stretch the
+	-- window (#20), so we pick an arbitrary number for that
+	if user_scrolloff >= 30 then
+		user_scrolloff = 0
+	end
+
 	local opts_row = 1
 	if win_height < user_scrolloff then
 		win_height = user_scrolloff
