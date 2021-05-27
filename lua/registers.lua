@@ -292,7 +292,7 @@ local function apply_register(register)
 
 		-- If the screen is invoked from insert mode, just paste the contents of the register
 		-- Paste the content behind the cursor if it's at the end of the line, otherwise paste it in front
-		vim.api.nvim_put(lines, "b", cursor_is_last, true)
+		vim.api.nvim_put(lines, "b", false, true)
 	else
 		-- Define the keys pressed based on the mode
 		local keys
@@ -373,10 +373,6 @@ local function registers(mode)
 	operator_count = vim.api.nvim_get_vvar("count")
 	-- Keep track of the mode that's used to open the popup
 	invocation_mode = mode
-	-- Keep track of whether the cursor is at the last character of the line in insert mode
-	if mode == "i" then
-		cursor_is_last = vim.api.nvim_call_function("col", {"."}) == vim.api.nvim_call_function("col", {"$"}) - 1
-	end
 
 	-- Close the old window if it's still open
 	close_window()
