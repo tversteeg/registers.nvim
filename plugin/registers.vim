@@ -18,7 +18,7 @@ endfunction
 command! -nargs=? -complete=custom,s:arg_opts Registers lua require'registers'.registers(<f-args>)
 
 " Open the popup window when pressing <C-R> in insert mode
-inoremap <silent> <C-R> <C-O><cmd>Registers i<CR>
+inoremap <silent> <C-R> <C-\><C-O><cmd>Registers i<CR>
 
 " Open the popup window when pressing " in regular mode
 nnoremap <silent> " <cmd>Registers n<CR>
