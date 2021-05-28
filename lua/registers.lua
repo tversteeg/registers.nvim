@@ -272,27 +272,13 @@ local function apply_register(register)
 
 	-- Handle insert mode differently
 	if invocation_mode == "i" then
-		-- Handle the special case for the expression register
-		if register == "=" then
-			-- Get the proper keycode for <C-R>
-			local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
+		-- Get the proper keycode for <C-R>
+		local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
+		local submit = vim.api.nvim_replace_termcodes("<CR>", true, true, true)
 
-			-- Opening the expression register in normal mode magically works
-			-- I have no idea why..
-			vim.api.nvim_feedkeys(key .. "=", "n", true)
-		end
-
-		-- Don't try to apply the register when it's empty
-		if not line then
-			return
-		end
-
-		-- Split the newline characters into multiple lines
-		local lines = vim.split(register_lines[line].data, "\n")
-
-		-- If the screen is invoked from insert mode, just paste the contents of the register
-		-- Paste the content behind the cursor if it's at the end of the line, otherwise paste it in front
-		vim.api.nvim_put(lines, "b", false, true)
+		-- Opening the expression register in normal mode magically works
+		-- I have no idea why..
+		vim.api.nvim_feedkeys(key .. "=@" .. register .. submit, "n", true)
 	else
 		-- Define the keys pressed based on the mode
 		local keys
