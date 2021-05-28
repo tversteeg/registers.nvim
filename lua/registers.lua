@@ -84,10 +84,10 @@ local function read_registers()
 			if #raw > 0 then
 				-- Display the whitespace of the line as whitespace
 				local contents = raw:gsub("\t", cfg.tab_symbol)
-					-- Replace spaces
-					:gsub(" ", cfg.space_symbol)
-					-- Replace newlines
-					:gsub("[\n\r]", cfg.return_symbol)
+				-- Replace spaces
+				:gsub(" ", cfg.space_symbol)
+				-- Replace newlines
+				:gsub("[\n\r]", cfg.return_symbol)
 
 				-- Get the line with all the information
 				local line = string.format("%s: %s", reg, contents)
@@ -142,8 +142,8 @@ local function open_window()
 
 	-- Calculate the floating window size
 	local win_height = math.min(#register_lines,
-		-- If the whole buffer doesn't fit, use the size from the current line to the height
-		math.min(height - win_line, math.ceil(height * 0.8 - 4)))
+	-- If the whole buffer doesn't fit, use the size from the current line to the height
+	math.min(height - win_line, math.ceil(height * 0.8 - 4)))
 	local win_width = math.ceil(width * 0.8)
 
 	-- Set window at cursor position, unless the cursor is too close the bottom of the window
@@ -276,16 +276,23 @@ local function apply_register(register)
 		local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
 
 		if register == "=" then
+			-- Apply <c-r>= again in input mode so the user can enter their query
 			vim.api.nvim_feedkeys(key .. "=", "n", true)
 		else
-			local old_expr_content = register_contents('=', 1)
+			-- Capture the contents of the "=" register so it can be reset later
+			local old_expr_content = register_contents("=", 1)
+
 			local submit = vim.api.nvim_replace_termcodes("<CR>", true, true, true)
-			-- let execute the selected register content using `=` register and insert the result
+			-- Let execute the selected register content using `=` register and insert the result
 			vim.api.nvim_feedkeys(key .. "=@" .. register .. submit, "n", true)
-			-- recover the `=` register
-			vim.defer_fn(function()
-				vim.api.nvim_call_function('setreg', {'=', old_expr_content})
-			end, 100)
+			-- Recover the "=" register
+			-- This only works in neovim >= 0.5
+			-- TODO: support 0.4
+			if vim.api.nvim_call_function("has", {"nvim-0.4"}) == 0 then
+				vim.defer_fn(function()
+					vim.api.nvim_call_function("setreg", {"=", old_expr_content})
+				end, 100)
+			end
 		end
 	else
 		-- Define the keys pressed based on the mode
