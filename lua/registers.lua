@@ -278,13 +278,13 @@ local function apply_register(register)
 		if register == "=" then
 			vim.api.nvim_feedkeys(key .. "=", "n", true)
 		else
-			local old_expr_content = vim.fn.getreg('=', 1)
+			local old_expr_content = register_contents('=', 1)
 			local submit = vim.api.nvim_replace_termcodes("<CR>", true, true, true)
 			-- let execute the selected register content using `=` register and insert the result
 			vim.api.nvim_feedkeys(key .. "=@" .. register .. submit, "n", true)
 			-- recover the `=` register
 			vim.defer_fn(function()
-				vim.fn.setreg('=', old_expr_content)
+				vim.api.nvim_call_function('setreg', {'=', old_expr_content})
 			end, 100)
 		end
 	else
