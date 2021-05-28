@@ -274,11 +274,13 @@ local function apply_register(register)
 	if invocation_mode == "i" then
 		-- Get the proper keycode for <C-R>
 		local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
-		local submit = vim.api.nvim_replace_termcodes("<CR>", true, true, true)
 
-		-- Opening the expression register in normal mode magically works
-		-- I have no idea why..
-		vim.api.nvim_feedkeys(key .. "=@" .. register .. submit, "n", true)
+		if register == "=" then
+			vim.api.nvim_feedkeys(key .. "=", "n", true)
+		else
+			local submit = vim.api.nvim_replace_termcodes("<CR>", true, true, true)
+			vim.api.nvim_feedkeys(key .. "=@" .. register .. submit, "n", true)
+		end
 	else
 		-- Define the keys pressed based on the mode
 		local keys
