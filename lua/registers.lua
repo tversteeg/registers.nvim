@@ -82,12 +82,17 @@ local function read_registers()
 
 			-- Skip empty registers
 			if #raw > 0 then
+				if cfg.trim_whitespace == 1 then
+					-- Trim the whitespace at the start and end
+					raw = raw:match("^%s*(.-)%s*$")
+				end
+
 				-- Display the whitespace of the line as whitespace
 				local contents = raw:gsub("\t", cfg.tab_symbol)
-				-- Replace spaces
-				:gsub(" ", cfg.space_symbol)
-				-- Replace newlines
-				:gsub("[\n\r]", cfg.return_symbol)
+					-- Replace spaces
+					:gsub(" ", cfg.space_symbol)
+					-- Replace newlines
+					:gsub("[\n\r]", cfg.return_symbol)
 
 				-- Get the line with all the information
 				local line = string.format("%s: %s", reg, contents)
