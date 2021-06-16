@@ -48,7 +48,7 @@ paq "tversteeg/registers.nvim"
 ### Plug
 
 ```vim
-Plug 'tversteeg/registers.nvim'
+Plug 'tversteeg/registers.nvim', { 'branch': 'main' }
 ```
 
 ### Dein
