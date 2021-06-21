@@ -290,7 +290,7 @@ local function apply_register(register)
 			local submit = vim.api.nvim_replace_termcodes("<CR>", true, true, true)
 			-- Let execute the selected register content using `=` register and insert the result
 			vim.api.nvim_feedkeys(key .. "=@" .. register .. submit, "n", true)
-			
+
 			-- Recover the "=" register
 			-- This only works in neovim >= 0.5
 			-- TODO: support 0.4
@@ -348,7 +348,7 @@ local function set_mappings()
 			-- Also map upper case characters if applicable
 			local reg_upper_case = reg:upper()
 			if reg_upper_case ~= reg then
-				mappings[reg_upper_case] = ("apply_register(%q)"):format(reg)
+				mappings[reg_upper_case] = ("apply_register(%q)"):format(reg_upper_case)
 			end
 		end
 	end
