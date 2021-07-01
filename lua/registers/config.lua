@@ -19,5 +19,6 @@ return function()
 		register_key_sleep = global_var_or("registers_register_key_sleep", 0),
 		show_empty_registers = global_var_or("registers_show_empty_registers", 1),
 		trim_whitespace = global_var_or("registers_trim_whitespace", 0),
+		window_border = global_var_or("registers_window_border", "none"),
 	}
 end

@@ -177,6 +177,9 @@ local function open_window()
 		row = opts_row,
 		col = 0
 	}
+   	if vim.api.nvim_call_function("has", {"nvim-0.5"}) == 1 then
+   		opts.border = config().window_border
+   	end
 
 	-- Finally create it with buffer attached
 	win = vim.api.nvim_open_win(buf, true, opts)
