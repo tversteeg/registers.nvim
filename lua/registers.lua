@@ -167,6 +167,12 @@ local function open_window()
 		opts_row = win_line - user_scrolloff
 	end
 
+	local min_height = config().window_min_height
+	if win_height < min_height then
+		win_height = min_height
+		opts_row = win_line - min_height
+	end
+
 	-- Set some options
 	local opts = {
 		style = "minimal",
