@@ -20,5 +20,6 @@ return function()
 		show_empty_registers = global_var_or("registers_show_empty_registers", 1),
 		trim_whitespace = global_var_or("registers_trim_whitespace", 0),
 		window_border = global_var_or("registers_window_border", "none"),
+		window_min_height = global_var_or("registers_window_min_height", 1)
 	}
 end
