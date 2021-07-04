@@ -81,7 +81,14 @@ local function read_registers()
 			local raw = register_contents(reg)
 
 			-- Skip empty registers
-			if #raw > 0 then
+			local is_empty = #raw > 0
+
+			-- Mark the register as empty if there's only whitespace
+			if is_empty and cfg.hide_only_whitespace == 1 then
+				is_empty = #(raw:match("^%s*(.-)%s*$")) > 0
+			end
+
+			if is_empty then
 				if cfg.trim_whitespace == 1 then
 					-- Trim the whitespace at the start and end
 					raw = raw:match("^%s*(.-)%s*$")
@@ -183,7 +190,7 @@ local function open_window()
 		row = opts_row,
 		col = 0
 	}
-   	if vim.api.nvim_call_function("has", {"nvim-0.5"}) == 1 then
+   	if vim.api.nvim_call_function("has", {"nvim-0.4"}) == 0 then
    		opts.border = config().window_border
    	end
 
