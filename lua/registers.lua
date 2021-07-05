@@ -190,7 +190,7 @@ local function open_window()
 		row = opts_row,
 		col = 0
 	}
-   	if vim.api.nvim_call_function("has", {"nvim-0.4"}) == 0 then
+   	if vim.api.nvim_call_function("has", {"nvim-0.5"}) == 1 then
    		opts.border = config().window_border
    	end
 
@@ -310,7 +310,7 @@ local function apply_register(register)
 			-- Recover the "=" register
 			-- This only works in neovim >= 0.5
 			-- TODO: support 0.4
-			if vim.api.nvim_call_function("has", {"nvim-0.4"}) == 0 then
+			if vim.api.nvim_call_function("has", {"nvim-0.5"}) == 1 then
 				vim.defer_fn(function()
 					vim.api.nvim_call_function("setreg", {"=", old_expr_content})
 				end, 100)
