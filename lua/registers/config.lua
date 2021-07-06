@@ -21,6 +21,7 @@ return function()
 		trim_whitespace = global_var_or("registers_trim_whitespace", 1),
 		hide_only_whitespace = global_var_or("registers_hide_only_whitespace", 0),
 		window_border = global_var_or("registers_window_border", "none"),
-		window_min_height = global_var_or("registers_window_min_height", 3)
+		window_min_height = global_var_or("registers_window_min_height", 3),
+		window_max_width = global_var_or("registers_window_max_width", 100),
 	}
 end

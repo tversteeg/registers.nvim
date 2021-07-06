@@ -154,9 +154,10 @@ local function open_window()
 
 	-- Calculate the floating window size
 	local win_height = math.min(#register_lines,
-	-- If the whole buffer doesn't fit, use the size from the current line to the height
-	math.min(height - win_line, math.ceil(height * 0.8 - 4)))
-	local win_width = math.ceil(width * 0.8)
+		-- If the whole buffer doesn't fit, use the size from the current line to the height
+		math.min(height - win_line, math.ceil(height * 0.8 - 4)))
+	-- Cap the window width to a maximum size
+	local win_width = math.min(width, config().window_max_width)
 
 	-- Set window at cursor position, unless the cursor is too close the bottom of the window
 	-- Too close is what the user set as scrolloff
@@ -174,6 +175,7 @@ local function open_window()
 		opts_row = win_line - user_scrolloff
 	end
 
+	-- Set a minimum window height when the configuration is set
 	local min_height = config().window_min_height
 	if win_height < min_height then
 		win_height = min_height
@@ -188,7 +190,7 @@ local function open_window()
 		height = win_height,
 		-- Position it next to the cursor
 		row = opts_row,
-		col = 0
+		col = 0,
 	}
    	if vim.api.nvim_call_function("has", {"nvim-0.4"}) == 0 then
    		opts.border = config().window_border
