@@ -206,6 +206,8 @@ local function open_window()
 
 	-- Highlight the cursor line
 	vim.api.nvim_win_set_option(win, "cursorline", true)
+	-- Allow configuration of colors
+	vim.api.nvim_win_set_option(win, "winhighlight", "NormalFloat:RegistersWindow")
 end
 
 -- Update the popup window

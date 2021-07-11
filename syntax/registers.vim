@@ -47,4 +47,6 @@ hi def link RegistersContentEscaped Special
 hi def link RegistersContentWhitespace Comment
 hi def link RegistersContentString String
 
+hi def link RegistersWindow NormalFloat
+
 let b:registers_syntax_loaded = 1
