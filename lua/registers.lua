@@ -185,7 +185,9 @@ local function open_window()
 	-- Set some options
 	local opts = {
 		style = "minimal",
-		relative = "cursor",
+		-- When in command mode use the whole editor for the relative position
+		-- Otherwise make the window relative to the cursor
+		relative = invocation_mode == "c" and "editor" or "cursor",
 		width = win_width,
 		height = win_height,
 		-- Position it next to the cursor
@@ -400,24 +402,48 @@ local function set_mappings()
 	vim.api.nvim_buf_set_keymap(buf, "i", "<c-n>", "<down>", map_options)
 end
 
--- Spawn the window
+-- Invoke the timer for creating a window
 local function registers(mode)
 	-- Keep track of the count that's used to invoke the window so it can be applied again
 	operator_count = vim.api.nvim_get_vvar("count")
 	-- Keep track of the mode that's used to open the popup
 	invocation_mode = mode
 
-	-- Close the old window if it's still open
-	close_window()
+	-- Start the timer to open the window with the delay from the configuration or until a key is pressed before that
+	local status = vim.api.nvim_call_function("wait", {config().delay, "getchar(1)"})
+	if status < 0 then
+		-- No character pressed, open the window
+		
+		-- Close the old window if it's still open
+		close_window()
 
-	open_window()
-	set_mappings()
-	update_view()
+		open_window()
+		set_mappings()
+		update_view()
+	else
+		-- Get the key pressed
+		local number_key_pressed = vim.api.nvim_call_function("getchar", {})
+		local key_pressed = vim.api.nvim_call_function("nr2char", {number_key_pressed})
+
+		-- Get the key used to open the registers
+		local register_key
+		if invocation_mode == "i" then
+			-- Get the proper keycode for <C-R>
+			register_key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
+		else
+			register_key = "\""
+		end
+
+		-- Press the previously pressed keys
+		-- TODO: is there a nicer way to do this?
+		vim.api.nvim_feedkeys(register_key .. key_pressed, "n", true)
+	end
 end
 
 -- Public functions
 return {
 	registers = registers,
 	apply_register = apply_register,
+	open_window = open_window,
 	close_window = close_window,
 }

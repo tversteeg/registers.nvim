@@ -20,6 +20,9 @@ command! -nargs=? -complete=custom,s:arg_opts Registers lua require'registers'.r
 " Open the popup window when pressing <C-R> in insert mode
 inoremap <silent> <C-R> <cmd>Registers i<CR>
 
+" Open the popup window when pressing <C-R> in command mode
+cnoremap <silent> <C-R> <cmd>Registers c<CR>
+
 " Open the popup window when pressing " in regular mode
 nnoremap <silent> " <cmd>Registers n<CR>
 

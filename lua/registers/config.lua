@@ -16,6 +16,7 @@ return function()
 		tab_symbol = global_var_or("registers_tab_symbol", "·"),
 		space_symbol = global_var_or("registers_space_symbol", " "),
 		return_symbol = global_var_or("registers_return_symbol", "⏎"),
+		delay = global_var_or("registers_delay", 0),
 		register_key_sleep = global_var_or("registers_register_key_sleep", 0),
 		show_empty_registers = global_var_or("registers_show_empty_registers", 1),
 		trim_whitespace = global_var_or("registers_trim_whitespace", 1),
