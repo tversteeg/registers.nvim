@@ -18,13 +18,13 @@ endfunction
 command! -nargs=? -complete=custom,s:arg_opts Registers lua require'registers'.registers(<f-args>)
 
 " Open the popup window when pressing <C-R> in insert mode
-inoremap <silent> <C-R> <cmd>Registers i<CR>
+inoremap <buffer> <silent> <C-R> <cmd>Registers i<CR>
 
 " Open the popup window when pressing " in regular mode
-nnoremap <silent> " <cmd>Registers n<CR>
+nnoremap <buffer> <silent> " <cmd>Registers n<CR>
 
 " Open the popup window when pressing " in visual mode
-xnoremap <silent> " <esc><cmd>Registers v<CR>
+xnoremap <buffer> <silent> " <esc><cmd>Registers v<CR>
 
 " Restore after
 let &cpo = s:save_cpo
