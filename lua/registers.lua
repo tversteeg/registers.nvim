@@ -409,35 +409,12 @@ local function registers(mode)
 	-- Keep track of the mode that's used to open the popup
 	invocation_mode = mode
 
-	-- Start the timer to open the window with the delay from the configuration or until a key is pressed before that
-	local status = vim.api.nvim_call_function("wait", {config().delay, "getchar(1)"})
-	if status < 0 then
-		-- No character pressed, open the window
-		
-		-- Close the old window if it's still open
-		close_window()
+    -- Close the old window if it's still open
+    close_window()
 
-		open_window()
-		set_mappings()
-		update_view()
-	else
-		-- Get the key pressed
-		local number_key_pressed = vim.api.nvim_call_function("getchar", {})
-		local key_pressed = vim.api.nvim_call_function("nr2char", {number_key_pressed})
-
-		-- Get the key used to open the registers
-		local register_key
-		if invocation_mode == "i" then
-			-- Get the proper keycode for <C-R>
-			register_key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
-		else
-			register_key = "\""
-		end
-
-		-- Press the previously pressed keys
-		-- TODO: is there a nicer way to do this?
-		vim.api.nvim_feedkeys(register_key .. key_pressed, "n", true)
-	end
+    open_window()
+    set_mappings()
+    update_view()
 end
 
 -- Public functions
