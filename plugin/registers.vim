@@ -11,7 +11,7 @@ set cpo&vim
 
 " Plugin calls to open the register window
 nnoremap <silent> <Plug>(registers) :<c-u>lua require'registers'.registers('n')<cr>
-xnoremap <silent> <Plug>(registers) :<c-u>lua require'registers'.registers('x')<cr>
+xnoremap <silent> <Plug>(registers) :<c-u>lua require'registers'.registers('v')<cr>
 inoremap <silent> <Plug>(registers) <c-\><c-o>:<c-u>lua require'registers'.registers('i')<cr>
 
 " Custom :Registers command
