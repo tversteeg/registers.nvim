@@ -48,30 +48,14 @@ function! registers#peek(mode)
 	return "\<Plug>(registers)"
 endfunction
 
-" Enable all key mappings
-function! registers#on()
-	if get(b:, 'registers_on', 0)
-		return
-	endif
+" Open the popup window when pressing <C-R> in insert mode
+imap <buffer> <expr> <C-R> registers#peek('<C-R>')
 
-	" Open the popup window when pressing <C-R> in insert mode
-	imap <buffer> <expr> <C-R> registers#peek('<C-R>')
+" Open the popup window when pressing " in regular mode
+nmap <buffer> <expr> " registers#peek('"')
 
-	" Open the popup window when pressing " in regular mode
-	nmap <buffer> <expr> " registers#peek('"')
-
-	" Open the popup window when pressing " in visual mode
-	xmap <buffer> <expr> " registers#peek('"')
-
-	let b:registers_on = 1
-endfunction
-
-" Automatically enable the key mappings when inside a proper window type
-" Inspired by https://github.com/junegunn/vim-peekaboo/blob/master/plugin/peekaboo.vim
-augroup registers_init
-	autocmd!
-	autocmd BufEnter * if !exists('*getcmdwintype') || empty(getcmdwintype()) | call registers#on() | endif
-augroup END
+" Open the popup window when pressing " in visual mode
+xmap <buffer> <expr> " registers#peek('"')
 
 " Restore after
 let &cpo = s:save_cpo
