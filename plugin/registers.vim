@@ -48,14 +48,18 @@ function! registers#peek(mode)
 	return "\<Plug>(registers)"
 endfunction
 
-" Open the popup window when pressing <C-R> in insert mode
-imap <buffer> <expr> <C-R> registers#peek('<C-R>')
+augroup Registers
+	au!
 
-" Open the popup window when pressing " in regular mode
-nmap <buffer> <expr> " registers#peek('"')
+	" Open the popup window when pressing <C-R> in insert mode
+	au BufEnter * imap <buffer> <expr> <C-R> registers#peek('<C-R>')
 
-" Open the popup window when pressing " in visual mode
-xmap <buffer> <expr> " registers#peek('"')
+	" Open the popup window when pressing " in regular mode
+	au BufEnter * nmap <buffer> <expr> " registers#peek('"')
+
+	" Open the popup window when pressing " in visual mode
+	au BufEnter * xmap <buffer> <expr> " registers#peek('"')
+augroup END
 
 " Restore after
 let &cpo = s:save_cpo
