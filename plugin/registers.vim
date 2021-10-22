@@ -61,6 +61,11 @@ augroup Registers
 	au BufEnter * xmap <buffer> <expr> " registers#peek('"')
 augroup END
 
+" Ensure the mapping is set, because sometimes the BufEnter doesn't trigger
+imap <buffer> <expr> <C-R> registers#peek('<C-R>')
+nmap <buffer> <expr> " registers#peek('"')
+xmap <buffer> <expr> " registers#peek('"')
+
 " Restore after
 let &cpo = s:save_cpo
 unlet s:save_cpo
