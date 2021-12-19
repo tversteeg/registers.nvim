@@ -9,6 +9,11 @@ let s:save_cpo = &cpo
 " Reset them to defaults
 set cpo&vim
 
+" Get the configuration
+let g:registers_visual_mode = get(g:, 'registers_visual_mode', 1)
+let g:registers_normal_mode = get(g:, 'registers_normal_mode', 1)
+let g:registers_insert_mode = get(g:, 'registers_insert_mode', 1)
+
 " Plugin calls to open the register window
 nnoremap <silent> <Plug>(registers) :<c-u>lua require'registers'.registers('n')<cr>
 xnoremap <silent> <Plug>(registers) :<c-u>lua require'registers'.registers('v')<cr>
@@ -51,20 +56,26 @@ endfunction
 augroup Registers
 	au!
 
-	" Open the popup window when pressing <C-R> in insert mode
-	au BufEnter * imap <buffer> <expr> <C-R> registers#peek('<C-R>')
+	if g:registers_insert_mode
+		" Open the popup window when pressing <C-R> in insert mode
+		au BufEnter * imap <buffer> <expr> <C-R> registers#peek('<C-R>')
+	endif
 
-	" Open the popup window when pressing " in regular mode
-	au BufEnter * nmap <buffer> <expr> " registers#peek('"')
+	if g:registers_normal_mode
+		" Open the popup window when pressing " in regular mode
+		au BufEnter * nmap <buffer> <expr> " registers#peek('"')
+	endif
 
-	" Open the popup window when pressing " in visual mode
-	au BufEnter * xmap <buffer> <expr> " registers#peek('"')
+	if g:registers_visual_mode
+		" Open the popup window when pressing " in visual mode
+		au BufEnter * xmap <buffer> <expr> " registers#peek('"')
+	endif
 augroup END
 
 " Ensure the mapping is set, because sometimes the BufEnter doesn't trigger
-imap <buffer> <expr> <C-R> registers#peek('<C-R>')
-nmap <buffer> <expr> " registers#peek('"')
-xmap <buffer> <expr> " registers#peek('"')
+if g:registers_insert_mode | imap <buffer> <expr> <C-R> registers#peek('<C-R>') | endif
+if g:registers_normal_mode | nmap <buffer> <expr> " registers#peek('"') | endif
+if g:registers_visual_mode | xmap <buffer> <expr> " registers#peek('"') | endif
 
 " Restore after
 let &cpo = s:save_cpo
