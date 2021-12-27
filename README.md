@@ -1,8 +1,8 @@
 # registers.nvim
 
-Show register content when you try to access it in NeoVim. Written in Lua.
+Show register content when you try to access it in Neovim. Written in Lua.
 
-Requires NeoVim 0.4.4+.
+Requires Neovim 0.4.4+.
 
 ## Features
 
