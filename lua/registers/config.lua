@@ -25,5 +25,6 @@ return function()
 		window_min_height = global_var_or("registers_window_min_height", 3),
 		window_max_width = global_var_or("registers_window_max_width", 100),
 		show = global_var_or("registers_show", "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz"),
+		paste_in_normal_mode = global_var_or("registers_paste_in_normal_mode", 0),
 	}
 end

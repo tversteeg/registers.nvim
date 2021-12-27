@@ -72,6 +72,7 @@ let g:registers_window_border = "single" "'none' by default, can be 'none', 'sin
 let g:registers_window_min_height = 10 "3 by default, minimum height of the window when there is the cursor at the bottom
 let g:registers_window_max_width = 20 "100 by default, maximum width of the window
 let g:registers_normal_mode = 0 "1 by default, open the window in normal mode
+let g:registers_paste_in_normal_mode = 1 "0 by default, automatically perform a paste action when selecting a register in normal mode
 let g:registers_visual_mode = 0 "1 by default, open the window in visual mode
 let g:registers_insert_mode = 0 "1 by default, open the window in insert mode
 let g:registers_show = "*+\"" "'*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz' by default, which registers to show and in what order

@@ -282,7 +282,7 @@ local function apply_register(register)
 	else
 		-- Define the keys pressed based on the mode
 		local keys
-		if invocation_mode == "n" then
+		if invocation_mode == "n" and config().paste_in_normal_mode == 0 then
 			-- When the popup is opened with the " key in normal mode
 			if operator_count > 0 then
 				-- Allow 10".. using the stored operator count
@@ -298,8 +298,7 @@ local function apply_register(register)
 			keys = "gv\"" .. register
 		else
 			-- When the popup is opened without any mode passed, i.e. directly from the
-			-- function call
-			-- Automatically paste it
+			-- function call, or if "registers_paste_in_normal_mode" is set, automatically paste it
 			keys = "\"" .. register .. "p"
 		end
 
