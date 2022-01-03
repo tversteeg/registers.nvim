@@ -75,5 +75,5 @@ let g:registers_normal_mode = 0 "1 by default, open the window in normal mode
 let g:registers_paste_in_normal_mode = 1 "0 by default, automatically perform a paste action when selecting a register in normal mode
 let g:registers_visual_mode = 0 "1 by default, open the window in visual mode
 let g:registers_insert_mode = 0 "1 by default, open the window in insert mode
-let g:registers_show = "*+\"" "'*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz' by default, which registers to show and in what order
+let g:registers_show = "*+\"" "'*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:' by default, which registers to show and in what order
 ```
