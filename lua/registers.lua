@@ -366,9 +366,13 @@ local function registers(mode)
     -- Close the old window if it's still open
     close_window()
 
-    open_window()
-    set_mappings()
-    update_view()
+    -- Check if the current buffer is modifiable, otherwise don't open it
+    local current_buf = vim.api.nvim_get_current_buf()
+    if vim.api.nvim_buf_get_option(buf, "modifiable") then
+        open_window()
+        set_mappings()
+        update_view()
+    end
 end
 
 -- Public functions
