@@ -368,7 +368,7 @@ local function registers(mode)
 
     -- Check if the current buffer is modifiable, otherwise don't open it
     local current_buf = vim.api.nvim_get_current_buf()
-    if vim.api.nvim_buf_get_option(buf, "modifiable") then
+    if vim.api.nvim_buf_get_option(current_buf, "modifiable") then
         open_window()
         set_mappings()
         update_view()
