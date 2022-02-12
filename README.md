@@ -57,23 +57,230 @@ Plug 'tversteeg/registers.nvim', { 'branch': 'main' }
 call dein#add('tversteeg/registers.nvim')
 ```
 
-## Setup
+## Configuration
+
+### `return_symbol`
+
+Symbol shown for newline characters.
+
+#### Default
+
+`"⏎"`
+
+#### Example
 
 ```vim
-let g:registers_return_symbol = "\n" "'⏎' by default
-let g:registers_tab_symbol = "\t" "'·' by default
-let g:registers_space_symbol = "." "' ' by default
-let g:registers_delay = 500 "0 by default, milliseconds to wait before opening the popup window
-let g:registers_register_key_sleep = 1 "0 by default, seconds to wait before closing the window when a register key is pressed
-let g:registers_show_empty_registers = 0 "1 by default, an additional line with the registers without content
-let g:registers_trim_whitespace = 0 "1 by default, don't show whitespace at the begin and end of the registers
-let g:registers_hide_only_whitespace = 1 "0 by default, don't show registers filled exclusively with whitespace
-let g:registers_window_border = "single" "'none' by default, can be 'none', 'single','double', 'rounded', 'solid', or 'shadow' (requires Neovim 0.5.0+)
-let g:registers_window_min_height = 10 "3 by default, minimum height of the window when there is the cursor at the bottom
-let g:registers_window_max_width = 20 "100 by default, maximum width of the window
-let g:registers_normal_mode = 0 "1 by default, open the window in normal mode
-let g:registers_paste_in_normal_mode = 1 "0 by default, automatically perform a paste action when selecting a register in normal mode
-let g:registers_visual_mode = 0 "1 by default, open the window in visual mode
-let g:registers_insert_mode = 0 "1 by default, open the window in insert mode
-let g:registers_show = "*+\"" "'*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:' by default, which registers to show and in what order
+let g:registers_return_symbol = "\n"
+```
+
+### `tab_symbol`
+
+Symbol shown for tab characters.
+
+#### Default
+
+`"·"`
+
+#### Example
+
+```vim
+let g:registers_tab_symbol = "\t"
+```
+
+### `space_symbol`
+
+Symbol shown for space characters.
+
+#### Default
+
+`" "`
+
+#### Example
+
+```vim
+let g:registers_space_symbol = "."
+```
+
+### `delay`
+
+Milliseconds to wait before opening the popup window.
+
+#### Default
+
+`0`
+
+#### Example
+
+```vim
+let g:registers_delay = 500
+```
+
+### `register_key_sleep`
+
+Seconds to wait before closing the window when a register key is pressed.
+
+#### Default
+
+`0`
+
+#### Example
+
+```vim
+let g:registers_register_key_sleep = 1
+```
+
+### `show_empty_registers`
+
+An additional line with the registers without content.
+
+#### Default
+
+`1`
+
+#### Example
+
+```vim
+let g:registers_show_empty_registers = 0
+```
+
+### `trim_whitespace`
+
+Don't show whitespace at the begin and end of the registers.
+
+#### Default
+
+`1`
+
+#### Example
+
+```vim
+let g:registers_trim_whitespace = 0
+```
+
+### `hide_only_whitespace`
+
+Don't show registers filled exclusively with whitespace.
+
+#### Default
+
+`0`
+
+#### Example
+
+```vim
+let g:registers_hide_only_whitespace = 1
+```
+
+### `window_border`
+
+Requires Neovim 0.5.0+.
+
+Can be `"none"`, `"single"`, `"double"`, `"rounded"`, `"solid"`, or `"shadow"`.
+
+#### Default
+
+`"none"`
+
+#### Example
+
+```vim
+let g:registers_window_border = "single"
+```
+
+### `window_min_height`
+
+Minimum height of the window when there is the cursor at the bottom.
+
+#### Default
+
+`3`
+
+#### Example
+
+```vim
+let g:registers_window_min_height = 10
+```
+
+### `window_max_width`
+
+Maximum width of the window.
+
+#### Default
+
+`100`
+
+#### Example
+
+```vim
+let g:registers_window_max_width = 20
+```
+
+### `normal_mode`
+
+Open the window in normal mode.
+
+#### Default
+
+`1`
+
+#### Example
+
+```vim
+let g:registers_normal_mode = 0
+```
+
+### `paste_in_normal_mode`
+
+Automatically perform a paste action when selecting a register through any means in normal mode.
+
+#### Default
+
+`0`
+
+#### Example
+
+```vim
+let g:registers_paste_in_normal_mode = 1
+```
+
+### `visual_mode`
+
+Open the window in visual mode.
+
+#### Default
+
+`1`
+
+#### Example
+
+```vim
+let g:registers_visual_mode = 0
+```
+
+### `insert_mode`
+
+Open the window in insert mode.
+
+#### Default
+
+`1`
+
+#### Example
+
+```vim
+let g:registers_insert_mode = 0
+```
+
+### `show`
+
+Which registers to show and in what order.
+
+#### Default
+
+`"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`
+
+#### Example
+
+```vim
+let g:registers_show = "*+\""
 ```
