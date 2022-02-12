@@ -205,6 +205,9 @@ end
 local function apply_register(register)
 	local sleep = true
 
+    -- Keep track of how we select the register
+    local register_selected_with_return = register == nil
+
 	-- Try to find the line of the register
 	local line
 	if not register then
@@ -280,9 +283,12 @@ local function apply_register(register)
 			end
 		end
 	else
+        local paste_in_normal_mode = config().paste_in_normal_mode
+        local should_paste_in_normal_mode = paste_in_normal_mode == 1 or (paste_in_normal_mode == 2 and register_selected_with_return)
+
 		-- Define the keys pressed based on the mode
 		local keys
-		if invocation_mode == "n" and config().paste_in_normal_mode == 0 then
+		if invocation_mode == "n" and not should_paste_in_normal_mode then
 			-- When the popup is opened with the " key in normal mode
 			if operator_count > 0 then
 				-- Allow 10".. using the stored operator count

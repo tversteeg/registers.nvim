@@ -237,6 +237,12 @@ Automatically perform a paste action when selecting a register through any means
 
 `0`
 
+#### Options
+
+`0` - Default Neovim behavior.
+`1` - Paste when selecting a register with the register key and <kbd>Return</kbd>.
+`2` - Paste when selecting a register only with <kbd>Return</kbd>.
+
 #### Example
 
 ```vim
