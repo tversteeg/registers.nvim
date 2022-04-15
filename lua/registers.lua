@@ -378,6 +378,9 @@ local function registers(mode)
         open_window()
         set_mappings()
         update_view()
+    elseif invocation_mode == "n" then
+        -- Feed quote key after a safety check on invocation_mode
+        vim.fn.feedkeys('"', "n")
     end
 end
 
