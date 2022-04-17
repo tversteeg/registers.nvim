@@ -61,7 +61,7 @@ call dein#add('tversteeg/registers.nvim')
 
 ### `return_symbol`
 
-Symbol shown for newline characters.
+Symbol shown for newline characters. The newline character `"\n"` is not allowed here.
 
 #### Default
 
@@ -70,7 +70,7 @@ Symbol shown for newline characters.
 #### Example
 
 ```vim
-let g:registers_return_symbol = "\n"
+let g:registers_return_symbol = "\\n"
 ```
 
 ### `tab_symbol`
