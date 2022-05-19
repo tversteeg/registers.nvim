@@ -3,25 +3,25 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-        test:
-                name: test
-                runs-on: ubuntu-latest
-                strategy:
-                        matrix:
-                                version: [v0.5.0]
-                steps:
-                        - uses: actions/checkout@v2
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [v0.5.0, v0.6.0, v0.7.0, nightly]
+    steps:
+      - uses: actions/checkout@v2
 
-                        - name: install neovim
-                          run: |
-                                  wget https://github.com/neovim/neovim/releases/download/${{ matrix.version }}/nvim.appimage
-                                  chmod u+x nvim.appimage
-                                  sudo mv nvim.appimage /usr/bin/nvim
+      - name: install neovim
+        run: |
+          wget https://github.com/neovim/neovim/releases/download/${{ matrix.version }}/nvim.appimage
+          chmod u+x nvim.appimage
+          sudo mv nvim.appimage /usr/bin/nvim
 
-                        - name: install plenary
-                          run: |
-                                  mkdir -p ~/.local/share/nvim/site/pack/vendor/start
-                                  git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
+      - name: install plenary
+        run: |
+          mkdir -p ~/.local/share/nvim/site/pack/vendor/start
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
 
-                        - name: run tests
-                          run: make test
+      - name: run tests
+        run: make test

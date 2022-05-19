@@ -121,3 +121,26 @@ bar
         end)
     end)
 end)
+
+describe("iabbrev", function()
+    before_each(function()
+        -- Create the initial buffer
+        setup_buffer([[
+foo
+bar]])
+    end)
+
+    describe("test1 <C-R>=2*3<CR>", function()
+        -- Create test abbrevations
+        vim.api.nvim_command("iabbrev test1 <C-R>=2*3<CR>")
+
+        vim.api.nvim_command("echo &rtp")
+
+        it("should output 6", function()
+            run_keys_and_assert(2, "otest1", [[
+foo
+bar
+6]])
+        end)
+    end)
+end)
