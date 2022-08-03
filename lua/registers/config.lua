@@ -26,5 +26,6 @@ return function()
 		window_max_width = global_var_or("registers_window_max_width", 100),
 		show = global_var_or("registers_show", "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"),
 		paste_in_normal_mode = global_var_or("registers_paste_in_normal_mode", 0),
+		system_clip = global_var_or("system_clip", 0)
 	}
 end
