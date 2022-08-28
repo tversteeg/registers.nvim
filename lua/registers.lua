@@ -1,10 +1,42 @@
+---@alias options
+---| {
+---|   show: string,
+---|   symbols: symbols_options,
+---|   register_user_command: bool,
+---|   window: window_options
+---| }
+
+---@alias symbols_options
+---| {
+---| newline: string,
+---| space: string,
+---| }
+
+---@alias window_options
+---| {
+---| max_width: number,
+---| highlight_cursorline: number,
+---| map_register_keys: bool,
+---| map_ctrl_k_and_j_movement: bool,
+---| map_ctrl_p_and_n_movement: bool,
+---| border: "none" | "single" | "double" | "rounded" | "solid" | "shadow" | string[]
+---| }
+
+---@alias mode
+---| '"insert"' # Insert the register's contents like when in insert mode and pressing <C-R>
+---| '"paste"' # Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p
+---| '"motion"' # Create a motion from the register, similar to pressing "*reg* (without pasting it yet)
+
 local registers = {}
 
--- Create the options object with defaults if the values are not set
+---Create the options object with defaults if the values are not set
+--
+---@param options? options list of options
+---@return options options with default values
 local function options_with_defaults(options)
-    return vim.tbl_deep_extend("keep", options, {
+    return vim.tbl_deep_extend("keep", options or {}, {
         -- Which registers to show and in what order
-        show = "*+a\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
+        show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
         -- Symbols used to replace text in the preview buffer
         symbols = {
             newline = "",
@@ -14,7 +46,7 @@ local function options_with_defaults(options)
         register_user_command = true,
         -- Floating window options
         window = {
-            -- Maxmium width of the window, normal size will be calculated based on the size of the longest register
+            -- Maximum width of the window, normal size will be calculated based on the size of the longest register
             max_width = 100,
             -- Whether to highlight the line the cursor is on
             highlight_cursorline = true,
@@ -24,13 +56,17 @@ local function options_with_defaults(options)
             map_ctrl_k_and_j_movement = true,
             -- Whether to map <c-p> and <c-n> for moving in the window
             map_ctrl_p_and_n_movement = true,
+            -- Border style of the window, options are "none", "single", "double", "rounded", "solid", "shadow" or an array of eight strings
+            border = "none",
         },
     })
 end
 
--- Let the user configure this plugin
+---Let the user configure this plugin
 --
--- This will also register the default user commands and key bindings
+---This will also register the default user commands and key bindings
+--
+---@param options? options list of options
 function registers.setup(options)
     -- Ensure that we have the proper neovim version
     if vim.fn.has("nvim-0.7.0") == 0 then
@@ -40,16 +76,22 @@ function registers.setup(options)
 
     -- Create the options object
     registers.options = options_with_defaults(options)
-    vim.pretty_print(registers.options)
 
     -- Create the user command to manually open the window with :Registers
     if registers.options.register_user_command then
         vim.api.nvim_create_user_command("Registers", registers.show, {})
     end
+
+    -- Create a namespace for the signs
+    registers._namespace = vim.api.nvim_create_namespace("registers.nvim")
 end
 
--- The function to popup the registers window
-function registers.show()
+---The function to popup the registers window
+--
+---@param mode mode
+function registers.show(mode)
+    registers._mode = mode or "paste"
+
     -- Fill the registers
     registers._read_registers()
 
@@ -69,7 +111,7 @@ function registers.show()
 
     else
         -- There is no max width supplied so use the longest registers length as the window size
-        window_width = registers._longest_register_length()
+        window_width = math.min(registers._longest_register_length())
     end
 
     -- Create the floating window
@@ -85,6 +127,8 @@ function registers.show()
         -- Place the new window just under the cursor
         row = 1,
         col = 0,
+        -- How the edges are rendered
+        border = registers.options.window.border,
     }
     registers._window = vim.api.nvim_open_win(registers._buffer, true, window_options)
 
@@ -95,6 +139,12 @@ function registers.show()
         callback = registers.close,
     })
 
+    -- Make the buffer content cut-off instead of starting on new line
+    vim.api.nvim_win_set_option(registers._window, "wrap", false)
+
+    -- Show a column on the left for the register names
+    vim.api.nvim_win_set_option(registers._window, "signcolumn", "yes")
+
     -- Highlight the cursor line
     if registers.options.window.highlight_cursorline then
         vim.api.nvim_win_set_option(registers._window, "cursorline", true)
@@ -102,12 +152,9 @@ function registers.show()
 
     -- Update the buffer
     registers._fill_window()
-
-    -- Put the focus on the window
-    vim.api.nvim_set_current_win(registers._window)
 end
 
--- Close the window
+---Close the window
 function registers.close()
     if not registers._window then
         -- There's nothing to close
@@ -118,7 +165,7 @@ function registers.close()
     registers._window = nil
 end
 
--- Fill the arrays with the register values
+---Fill the arrays with the register values
 function registers._read_registers()
     registers._register_values = {}
 
@@ -137,24 +184,25 @@ function registers._read_registers()
 
             -- The register contents as a single line
             local line = table.concat(register_info.regcontents, registers.options.symbols.newline)
-            register_info.line = ("%s: %s"):format(register, line)
+            register_info.line = line
 
             registers._register_values[#registers._register_values + 1] = register_info
         end
     end
 end
 
--- Fill the window's buffer
+---Fill the window's buffer
 function registers._fill_window()
     -- Get the width of the window to truncate the strings
     local max_width = vim.api.nvim_win_get_width(registers._window) - 2
+    print(max_width)
 
     -- Create an array of lines for all the registers
     local lines = {}
     for i = 1, #registers._register_values do
         local register = registers._register_values[i]
 
-        lines[i] = register.line:sub(1, max_width)
+        lines[i] = register.line
     end
 
     -- Write the lines to the buffer
@@ -162,9 +210,20 @@ function registers._fill_window()
 
     -- Don't allow the buffer to be modified
     vim.api.nvim_buf_set_option(registers._buffer, "modifiable", false)
+
+    -- Create signs for the register itself
+    for i = 1, #registers._register_values do
+        local register = registers._register_values[i]
+
+        -- Create signs for the register itself
+        vim.api.nvim_buf_set_extmark(registers._buffer, registers._namespace, i - 1, -1, {
+            id = i,
+            sign_text = register.register
+        })
+    end
 end
 
--- Set the key bindings for the window
+---Set the key bindings for the window
 function registers._set_bindings()
     -- Create the mappings
     local mappings = {
@@ -219,17 +278,23 @@ function registers._set_bindings()
     end
 end
 
--- Apply the register and close the window
+---Apply the register and close the window
 --
--- When no argument is passed the current line is assumed to be the target
+---@param register|nil string which register to apply or the current line
 function registers._apply_register(register)
+    if register == nil then
+        -- A register is selected by the cursor, get it based on the current line
+        local cursor = unpack(vim.api.nvim_win_get_cursor(registers._window))
+        register = registers._register_values[cursor].register
+    end
+
     -- Close the window
     registers.close()
 
     print(register)
 end
 
--- Get the length of the longest register
+---Get the length of the longest register
 function registers._longest_register_length()
     local longest = 0
     for i = 1, #registers._register_values do
@@ -243,7 +308,7 @@ function registers._longest_register_length()
     return longest
 end
 
--- All available registers
+---All available registers
 registers._all_registers = { "*", "+", "\"", "-", "/", "_", "=", "#", "%", ".", "0", "1", "2", "3", "4", "5", "6", "7",
     "8",
     "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
