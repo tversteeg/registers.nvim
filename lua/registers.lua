@@ -1,36 +1,30 @@
 ---@alias options
----| {
----|   show: string,
----|   symbols: symbols_options,
----|   register_user_command: bool,
----|   window: window_options
----| }
+---| { show: string, symbols: symbols_options, register_user_command: boolean, bind_keys: boolean, window: window_options }
 
 ---@alias symbols_options
----| {
----| newline: string,
----| space: string,
----| }
+---| { newline: string, space: string }
 
 ---@alias window_options
----| {
----| max_width: number,
----| highlight_cursorline: number,
----| map_register_keys: bool,
----| map_ctrl_k_and_j_movement: bool,
----| map_ctrl_p_and_n_movement: bool,
----| border: "none" | "single" | "double" | "rounded" | "solid" | "shadow" | string[]
----| }
+---| { max_width: number, highlight_cursorline: number, map_register_keys: boolean, map_ctrl_k_and_j_movement: boolean, map_ctrl_p_and_n_movement: boolean, border: window_border }
 
----@alias mode
+---@alias register_mode
 ---| '"insert"' # Insert the register's contents like when in insert mode and pressing <C-R>
 ---| '"paste"' # Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p
 ---| '"motion"' # Create a motion from the register, similar to pressing "*reg* (without pasting it yet)
 
+---@alias window_border
+---| '"none"'
+---| '"single"'
+---| '"double"'
+---| '"rounded"'
+---| '"solid"'
+---| '"shadow"'
+---| string[]
+
 local registers = {}
 
 ---Create the options object with defaults if the values are not set
---
+---
 ---@param options? options list of options
 ---@return options options with default values
 local function options_with_defaults(options)
@@ -44,6 +38,8 @@ local function options_with_defaults(options)
         },
         -- Whether to register the :Registers user command by default
         register_user_command = true,
+        -- Whether to automatically map " in normal mode and <C-R> in insert mode to display the registers window
+        bind_keys = true,
         -- Floating window options
         window = {
             -- Maximum width of the window, normal size will be calculated based on the size of the longest register
@@ -63,9 +59,9 @@ local function options_with_defaults(options)
 end
 
 ---Let the user configure this plugin
---
+---
 ---This will also register the default user commands and key bindings
---
+---
 ---@param options? options list of options
 function registers.setup(options)
     -- Ensure that we have the proper neovim version
@@ -84,11 +80,21 @@ function registers.setup(options)
 
     -- Create a namespace for the signs
     registers._namespace = vim.api.nvim_create_namespace("registers.nvim")
+
+    -- Bind the keys if applicable
+    if registers.options.bind_keys then
+        vim.api.nvim_set_keymap("n", "\"", "", { callback = function()
+            registers.show("normal")
+        end })
+        vim.api.nvim_set_keymap("i", "<C-R>", "", { callback = function()
+            registers.show("insert")
+        end })
+    end
 end
 
 ---The function to popup the registers window
---
----@param mode mode
+---
+---@param register_mode? mode
 function registers.show(mode)
     registers._mode = mode or "paste"
 
@@ -179,7 +185,8 @@ function registers._read_registers()
         local register_info = vim.api.nvim_call_function("getreginfo", { register })
 
         -- Ignore empty registers
-        if register_info.regcontents and type(register_info.regcontents) == "table" and #register_info.regcontents[1] > 0 then
+        if register_info.regcontents and type(register_info.regcontents) == "table" and register_info.regcontents[1] and
+            #register_info.regcontents[1] > 0 then
             register_info.register = register
 
             -- The register contents as a single line
@@ -193,10 +200,6 @@ end
 
 ---Fill the window's buffer
 function registers._fill_window()
-    -- Get the width of the window to truncate the strings
-    local max_width = vim.api.nvim_win_get_width(registers._window) - 2
-    print(max_width)
-
     -- Create an array of lines for all the registers
     local lines = {}
     for i = 1, #registers._register_values do
@@ -279,7 +282,7 @@ function registers._set_bindings()
 end
 
 ---Apply the register and close the window
---
+---
 ---@param register|nil string which register to apply or the current line
 function registers._apply_register(register)
     if register == nil then
@@ -309,9 +312,12 @@ function registers._longest_register_length()
 end
 
 ---All available registers
-registers._all_registers = { "*", "+", "\"", "-", "/", "_", "=", "#", "%", ".", "0", "1", "2", "3", "4", "5", "6", "7",
-    "8",
-    "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
-    "w", "x", "y", "z", ":" }
+registers._all_registers = {
+    "*", "+", "\"", "-", "/", "_", "=", "#", "%", ".",
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w",
+    "x", "y", "z",
+    ":"
+}
 
 return registers
