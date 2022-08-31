@@ -1,5 +1,5 @@
 ---@alias options
----| { show: string, symbols: symbols_options, register_user_command: boolean, bind_keys: boolean, window: window_options }
+---| { show: string, symbols: symbols_options, register_user_command: boolean, bind_keys: boolean, delay: number, window: window_options }
 
 ---@alias symbols_options
 ---| { newline: string, space: string }
@@ -19,13 +19,13 @@
 ---| '"rounded"'
 ---| '"solid"'
 ---| '"shadow"'
----| string[]
+---| string[] # An array of eight strings which each corner and side character
 
 local registers = {}
 
 ---Create the options object with defaults if the values are not set
 ---
----@param options? options list of options
+---@param options options? list of options
 ---@return options options with default values
 local function options_with_defaults(options)
     return vim.tbl_deep_extend("keep", options or {}, {
@@ -40,6 +40,8 @@ local function options_with_defaults(options)
         register_user_command = true,
         -- Whether to automatically map " in normal mode and <C-R> in insert mode to display the registers window
         bind_keys = true,
+        -- How long, in seconds, to wait before opening the window
+        delay = 0,
         -- Floating window options
         window = {
             -- Maximum width of the window, normal size will be calculated based on the size of the longest register
@@ -62,7 +64,7 @@ end
 ---
 ---This will also register the default user commands and key bindings
 ---
----@param options? options list of options
+---@param options options? list of options
 function registers.setup(options)
     -- Ensure that we have the proper neovim version
     if vim.fn.has("nvim-0.7.0") == 0 then
@@ -83,19 +85,44 @@ function registers.setup(options)
 
     -- Bind the keys if applicable
     if registers.options.bind_keys then
-        vim.api.nvim_set_keymap("n", "\"", "", { callback = function()
-            registers.show("normal")
-        end })
-        vim.api.nvim_set_keymap("i", "<C-R>", "", { callback = function()
-            registers.show("insert")
-        end })
+        vim.api.nvim_set_keymap("n", "\"", "", {
+            callback = function()
+                return registers.show("motion")
+            end,
+            expr = true
+        })
+        vim.api.nvim_set_keymap("i", "<C-R>", "", {
+            callback = function()
+                return registers.show("insert")
+            end,
+            expr = true
+        })
     end
 end
 
----The function to popup the registers window
+---Popup the registers window
 ---
----@param register_mode? mode
+---@param mode register_mode? how the registers window should handle the selection of registers
 function registers.show(mode)
+    -- Check whether a key is pressed in between waiting for the window to open
+    local interrupted = vim.wait(registers.options.delay * 1000, function()
+        return vim.fn.getchar(true) ~= 0
+    end, nil, false)
+
+    if interrupted then
+        -- While in a motion mode simulate the pressing of the " key
+        return "\""
+    else
+        -- The timeout was not interrupted by a key press, open a buffer
+        -- Must be scheduled so the window can be created at the right moment
+        vim.schedule(function() registers._create_window(mode) end)
+    end
+end
+
+---Create the window and the buffer
+---
+---@param mode register_mode?
+function registers._create_window(mode)
     registers._mode = mode or "paste"
 
     -- Fill the registers
@@ -182,7 +209,7 @@ function registers._read_registers()
         local register = show:sub(i, i)
 
         -- Get the register information
-        local register_info = vim.api.nvim_call_function("getreginfo", { register })
+        local register_info = vim.fn.getreginfo(register)
 
         -- Ignore empty registers
         if register_info.regcontents and type(register_info.regcontents) == "table" and register_info.regcontents[1] and
@@ -283,7 +310,7 @@ end
 
 ---Apply the register and close the window
 ---
----@param register|nil string which register to apply or the current line
+---@param register string? which register to apply or the current line
 function registers._apply_register(register)
     if register == nil then
         -- A register is selected by the cursor, get it based on the current line
