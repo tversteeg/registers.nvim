@@ -27,15 +27,15 @@ jobs:
         run: make test
 
   docs:
-    runs-on: ubuntu-latest
     name: emmylua to vimdoc
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
       - name: generate help
         run: |
           curl -Lq https://github.com/numToStr/lemmy-help/releases/latest/download/lemmy-help-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          ./lemmy-help lua/registers.lua > doc/${{env.PLUGIN_NAME}}.txt
+          ./lemmy-help lua/registers.lua > doc/registers.txt
 
       - name: commit help
         uses: stefanzweifel/git-auto-commit-action@v4

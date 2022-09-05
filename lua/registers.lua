@@ -94,8 +94,8 @@ local DEFAULT_OPTIONS = {
 ---@field private _previous_mode string
 ---@field private _namespace string
 ---@field private _operator_count integer
----@field private _window integer
----@field private _buffer integer
+---@field private _window integer?
+---@field private _buffer integer?
 ---@field private _register_values { regcontents: string, line: string, register: string }[]
 ---@field private _mappings table<string, function>
 local registers = {}
@@ -125,6 +125,9 @@ function registers.setup(options)
 
     -- Pre-fill the key mappings
     registers._fill_mappings()
+
+    -- Define the highlights
+    registers._define_highlights()
 
     -- Bind the keys if applicable
     if registers._key_should_be_bound("normal") then
@@ -233,6 +236,9 @@ function registers._create_window(mode)
     -- Remove the buffer when the window is closed
     vim.api.nvim_buf_set_option(registers._buffer, "bufhidden", "wipe")
 
+    -- Set the filetype
+    vim.api.nvim_buf_set_option(registers._buffer, "filetype", "registers")
+
     -- The width is based on the longest line, but it will be truncated if the max width is supplied and is longer
     local window_width
     if registers.options.window.max_width > 0 then
@@ -278,6 +284,9 @@ function registers._create_window(mode)
     if registers.options.window.highlight_cursorline then
         vim.api.nvim_win_set_option(registers._window, "cursorline", true)
     end
+
+    -- Add the colors
+    vim.api.nvim_win_set_option(registers._window, "winhighlight", "NormalFloat:RegistersWindow")
 
     -- Update the buffer
     registers._fill_window()
@@ -487,6 +496,51 @@ function registers._apply_register(register)
     end
 end
 
+---Register the highlights.
+function registers._define_highlights()
+    -- Helper function to make the definitions cleaner
+    function hl(name, link, syntax_type, match, opts)
+        -- Wrap match items in quotes so we don't have to
+        if syntax_type == "match" then
+            match = "\"" .. match .. "\""
+        end
+
+        -- Define the syntax for the highlight
+        local syntax_command = ("syntax %s Registers%s %s %s"):format(syntax_type, name, match, opts)
+        vim.api.nvim_err_writeln(syntax_command)
+        vim.api.nvim_exec(syntax_command, false)
+
+        -- Link the highlight
+        if link then
+            vim.api.nvim_set_hl(registers._namespace, "Registers" .. name, { link = link })
+        end
+    end
+
+    -- The content of the line
+    hl("ContentNumber", "Number", "match", "\\d\\+", "contained")
+    hl("ContentNumber", "Number", "match", "[-+]\\d\\+\\.\\d\\+", "contained")
+    hl("ContentEscaped", "Special", "match", "^\\w", "contained")
+    hl("ContentEscaped", "Special", "keyword", "\\.", "contained")
+    hl("ContentString", "String", "match", "\\\"[^\\\"]*\\\"", "contained")
+    hl("ContentString", "String", "match", "'[^']*'", "contained")
+    hl("ContentWhitespace", "Comment", "match", " ", "contained")
+    --hl("ContentWhitespace", "Comment", "keyword", "␉ · ⎵ \n \t ⏎", "contained")
+    hl("ContentRegion", nil, "match", ".*", "contains=RegistersContent.* contained")
+
+    hl("PrefixSelection", "Constant", "match", "[*+]", "contained")
+    hl("PrefixDefault", "Function", "match", "\"", "contained")
+    hl("PrefixUnnamed", "Statement", "match", "\\\\", "contained")
+    hl("PrefixReadOnly", "Type", "match", "[:.%]", "contained")
+    hl("PrefixLastSearch", "Tag", "match", "\\/", "contained")
+    hl("PrefixDelete", "Special", "match", "-", "contained")
+    hl("PrefixYank", "Delimiter", "keyword", "0", "contained")
+    hl("PrefixHistory", "Number", "keyword", "1 2 3 4 5 6 7 8 9", "contained")
+    hl("PrefixNamed", "Todo", "match", "[a-z]", "contained")
+    hl("Prefix", nil, "match", "[a-z]", "contains=RegistersPrefix.*")
+
+    vim.api.nvim_set_hl(registers._namespace, "RegistersWindow", { link = "NormalFloat" })
+end
+
 ---Get the length of the longest register.
 ---@return integer The length of the longest register
 ---@nodiscard
@@ -524,7 +578,6 @@ end
 ---Get the register information matching the register.
 ---@param register string? Register to look up, if nothing is passed the current line will be used
 ---@return table? Register information from `registers._register_values`
----@nodiscard
 ---@private
 function registers._register_info(register)
     if register == nil then

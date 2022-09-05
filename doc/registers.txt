@@ -1,0 +1,140 @@
+================================================================================
+Introduction                                                             *intro*
+
+Registers.nvim is a minimal but very configurable Neovim plugin.
+
+Almost everything can be configured using the mandatory `registers.setup({})` method.
+
+`packer.nvim` minimal setup:
+>
+use {
+  "tversteeg/registers.nvim",
+  config = function()
+    require("registers").setup()
+  end
+}
+<
+
+================================================================================
+`registers.setup` configuration options                                *options*
+
+options                                                                *options*
+    `require("registers").setup({...})`
+
+    Fields: ~
+        {show}                   (string)                     Which registers to show and in what order
+        {delay}                  (number)                     How long, in seconds, to wait before opening the window
+        {register_user_command}  (boolean)                    Whether to register the `:Registers` user command
+        {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard
+        {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register
+        {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys
+        {symbols}                (symbols_options)            Symbols used to replace text in the previous buffer.
+        {window}                 (window_options)             Floating window
+
+
+bind_keys_options                                            *bind_keys_options*
+    `require("registers").setup({ bind_keys = {...} })`
+
+    Fields: ~
+        {normal}     (boolean)  Map " in normal mode to display the registers window
+        {insert}     (boolean)  Map <C-R> in insert mode to display the registers window
+        {visual}     (boolean)  Map " in visual mode to display the registers window
+        {registers}  (boolean)  Map all register keys in the registers window
+        {ctrl_n}     (boolean)  Map <C-N> to move down in the registers window
+        {ctrl_p}     (boolean)  Map <C-P> to move up in the registers window
+        {ctrl_j}     (boolean)  Map <C-J> to move down in the registers window
+        {ctrl_k}     (boolean)  Map <C-K> to move up in the registers window
+
+
+symbols_options                                                *symbols_options*
+    `require("registers").setup({ symbols = {...} })`
+
+    Fields: ~
+        {newline}  (string?)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead
+        {space}    (string?)  Symbol to show for a space character
+        {tab}      (string?)  Symbol to show for a tab character
+
+
+window_border                                                    *window_border*
+
+
+    Variants: ~
+        ("none")
+        ("single")
+        ("double")
+        ("rounded")
+        ("solid")
+        ("shadow")
+        (string[])   An array of eight strings which each corner and side character
+
+
+window_options                                                  *window_options*
+    `require("registers").setup({ window = {...} })`
+
+    Fields: ~
+        {max_width}             (number?)         Maximum width of the window, normal size will be calculated based on the size of the longest register
+        {highlight_cursorline}  (boolean?)        Whether to create key mappings for the register values inside the window
+        {border}                (window_border?)  Border style of the window
+
+
+================================================================================
+Functions                                                            *functions*
+
+registers                                                            *registers*
+
+
+    Fields: ~
+        {options}  (options)
+
+
+registers.setup({options})                                     *registers.setup*
+    Let the user configure this plugin.
+
+    This will also register the default user commands and key bindings.
+
+    Parameters: ~
+        {options}  (options?)  Plugin configuration options
+
+    Usage: ~
+        >
+            require("registers").setup({})
+        <
+
+
+register_mode                                                    *register_mode*
+
+
+    Variants: ~
+        ("insert")  Insert the register's contents like when in insert mode and pressing <C-R>
+        ("paste")   Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode
+        ("motion")  Create a motion from the register, similar to pressing "*reg* (without pasting it yet)
+
+
+registers.show({mode})                                          *registers.show*
+    Popup the registers window.
+
+    Parameters: ~
+        {mode}  (register_mode?)  How the registers window should handle the selection of registers
+
+    Usage: ~
+        >
+            -- Disable all key bindings
+            require("registers").setup({ bind_keys = false })
+
+            -- Define a custom for opening the register window when pressing "r"
+            vim.api.nvim_set_keymap("n", "r", "", {
+                callback = function()
+                    -- The "paste" argument means that when a register is selected it will automatically be pasted
+                    return require("registers").show("paste")
+                end,
+                -- This is required for the registers window to function
+                expr = true
+            })
+        <
+
+
+registers.close()                                              *registers.close*
+    Close the window.
+
+
+vim:tw=78:ts=8:noet:ft=help:norl:
