@@ -497,6 +497,7 @@ function registers._apply_register(register)
 end
 
 ---Register the highlights.
+---@private
 function registers._define_highlights()
     -- Helper function to make the definitions cleaner
     function hl(name, link, syntax_type, match, opts)
