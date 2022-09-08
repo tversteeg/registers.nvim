@@ -27,6 +27,7 @@
 ---@field bind_keys bind_keys_options|boolean Which keys to bind, `true` maps all keys and `false` maps no keys
 ---@field symbols symbols_options Symbols used to replace text in the previous buffer.
 ---@field window window_options Floating window
+---@field sign_highlights sign_highlights_options Highlights for the sign section of the window
 
 ---@type options default values for all options
 local DEFAULT_OPTIONS = {
@@ -84,6 +85,30 @@ local DEFAULT_OPTIONS = {
         highlight_cursorline = true,
         border = "none",
     },
+
+    ---@class sign_highlights_options `require("registers").setup({ sign_highlights = {...} })`
+    ---@field cursorline string? Highlight group for when the cursor is over the line
+    ---@field selection string? Highlight group for the selection registers, `*+`
+    ---@field default string? Highlight group for the default register, `"`
+    ---@field unnamed string? Highlight group for the unnamed register, `\\`
+    ---@field read_only string? Highlight group for the read only registers, `:.%`
+    ---@field last_search string? Highlight group for the last search register, `/`
+    ---@field delete string? Highlight group for the delete register, `-`
+    ---@field yank string? Highlight group for the yank register, `0`
+    ---@field history string? Highlight group for the history registers, `1-9`
+    ---@field named string? Highlight group for the named registers, `a-z`
+    sign_highlights = {
+        cursorline = "Visual",
+        selection = "Constant",
+        default = "Function",
+        unnamed = "Statement",
+        read_only = "Type",
+        last_search = "Tag",
+        delete = "Special",
+        yank = "Delimiter",
+        history = "Number",
+        named = "Todo",
+    },
 }
 
 ---@mod functions Functions
@@ -120,14 +145,11 @@ function registers.setup(options)
         vim.api.nvim_create_user_command("Registers", registers.show, {})
     end
 
-    -- Create a namespace for the signs
-    registers._namespace = vim.api.nvim_create_namespace("registers.nvim")
+    -- Create a namespace for the highlights and signs
+    registers._namespace = vim.api.nvim_create_namespace("registers")
 
     -- Pre-fill the key mappings
     registers._fill_mappings()
-
-    -- Define the highlights
-    registers._define_highlights()
 
     -- Bind the keys if applicable
     if registers._key_should_be_bound("normal") then
@@ -286,10 +308,13 @@ function registers._create_window(mode)
     end
 
     -- Add the colors
-    vim.api.nvim_win_set_option(registers._window, "winhighlight", "NormalFloat:RegistersWindow")
+    registers._define_highlights()
 
     -- Update the buffer
     registers._fill_window()
+
+    -- Ensure the window shows up
+    vim.cmd("redraw!")
 end
 
 ---Fill the arrays with the register values.
@@ -350,14 +375,16 @@ function registers._fill_window()
     -- Don't allow the buffer to be modified
     vim.api.nvim_buf_set_option(registers._buffer, "modifiable", false)
 
-    -- Create signs for the register itself
+    -- Create signs and highlights for the register itself
     for i = 1, #registers._register_values do
         local register = registers._register_values[i]
 
-        -- Create signs for the register itself
-        vim.api.nvim_buf_set_extmark(registers._buffer, registers._namespace, i - 1, -1, {
+        -- Create signs for the register itself, and highlight the line
+        vim.api.nvim_buf_set_extmark(registers._buffer, registers._namespace, i - 1, 0, {
             id = i,
-            sign_text = register.register
+            sign_text = register.register,
+            sign_hl_group = registers._highlight_for_sign(register.register),
+            cursorline_hl_group = registers.options.sign_highlights.cursorline,
         })
     end
 end
@@ -499,47 +526,30 @@ end
 ---Register the highlights.
 ---@private
 function registers._define_highlights()
-    -- Helper function to make the definitions cleaner
-    function hl(name, link, syntax_type, match, opts)
-        -- Wrap match items in quotes so we don't have to
-        if syntax_type == "match" then
-            match = "\"" .. match .. "\""
-        end
+    -- Set the namespace for the highlights on the window
+    vim.api.nvim_win_set_hl_ns(registers._window, registers._namespace)
 
-        -- Define the syntax for the highlight
-        local syntax_command = ("syntax %s Registers%s %s %s"):format(syntax_type, name, match, opts)
-        vim.api.nvim_err_writeln(syntax_command)
-        vim.api.nvim_exec(syntax_command, false)
+    -- Define the matches and link them
+    vim.cmd([[syntax match RegistersNumber "\d\+"]])
+    vim.cmd([[syntax match RegistersNumber "[-+]\d\+\.\d\+"]])
+    vim.api.nvim_set_hl(registers._namespace, "RegistersNumber", { link = "Number" })
 
-        -- Link the highlight
-        if link then
-            vim.api.nvim_set_hl(registers._namespace, "Registers" .. name, { link = link })
-        end
-    end
+    vim.cmd([[syntax region RegistersString start=+"+ skip=+\\"+ end=+"+]])
+    vim.cmd([[syntax region RegistersString start=+'+ skip=+\\'+ end=+'+]])
+    vim.api.nvim_set_hl(registers._namespace, "RegistersString", { link = "String" })
 
-    -- The content of the line
-    hl("ContentNumber", "Number", "match", "\\d\\+", "contained")
-    hl("ContentNumber", "Number", "match", "[-+]\\d\\+\\.\\d\\+", "contained")
-    hl("ContentEscaped", "Special", "match", "^\\w", "contained")
-    hl("ContentEscaped", "Special", "keyword", "\\.", "contained")
-    hl("ContentString", "String", "match", "\\\"[^\\\"]*\\\"", "contained")
-    hl("ContentString", "String", "match", "'[^']*'", "contained")
-    hl("ContentWhitespace", "Comment", "match", " ", "contained")
-    --hl("ContentWhitespace", "Comment", "keyword", "␉ · ⎵ \n \t ⏎", "contained")
-    hl("ContentRegion", nil, "match", ".*", "contains=RegistersContent.* contained")
+    -- ⏎
+    vim.cmd([[syntax match RegistersWhitespace "\%u23CE"]])
+    -- ⎵
+    vim.cmd([[syntax match RegistersWhitespace "\%u23B5"]])
+    -- ·
+    vim.cmd([[syntax match RegistersWhitespace "\%u00B7"]])
+    vim.cmd([[syntax match RegistersWhitespace " "]])
+    vim.api.nvim_set_hl(registers._namespace, "RegistersWhitespace", { link = "Comment" })
 
-    hl("PrefixSelection", "Constant", "match", "[*+]", "contained")
-    hl("PrefixDefault", "Function", "match", "\"", "contained")
-    hl("PrefixUnnamed", "Statement", "match", "\\\\", "contained")
-    hl("PrefixReadOnly", "Type", "match", "[:.%]", "contained")
-    hl("PrefixLastSearch", "Tag", "match", "\\/", "contained")
-    hl("PrefixDelete", "Special", "match", "-", "contained")
-    hl("PrefixYank", "Delimiter", "keyword", "0", "contained")
-    hl("PrefixHistory", "Number", "keyword", "1 2 3 4 5 6 7 8 9", "contained")
-    hl("PrefixNamed", "Todo", "match", "[a-z]", "contained")
-    hl("Prefix", nil, "match", "[a-z]", "contains=RegistersPrefix.*")
-
-    vim.api.nvim_set_hl(registers._namespace, "RegistersWindow", { link = "NormalFloat" })
+    vim.cmd([[syntax match RegistersEscaped "\\\w"]])
+    vim.cmd([[syntax keyword RegistersEscaped \.]])
+    vim.api.nvim_set_hl(registers._namespace, "RegistersEscaped", { link = "Special" })
 end
 
 ---Get the length of the longest register.
@@ -594,6 +604,8 @@ function registers._register_info(register)
             end
         end
     end
+
+    return nil
 end
 
 ---Whether a key should be bound.
@@ -607,6 +619,31 @@ function registers._key_should_be_bound(option)
     else
         return registers.options.bind_keys[option]
     end
+end
+
+---The highlight group from the options for the sign.
+---@param register string Which register to get the highlight group for
+---@return string Highlight group
+---@nodiscard
+---@private
+function registers._highlight_for_sign(register)
+    local hl = registers.options.sign_highlights
+
+    return ({
+        ["*"] = hl.selection, ["+"] = hl.selection,
+        ["\""] = hl.default,
+        ["\\"] = hl.unnamed,
+        [":"] = hl.read_only, ["."] = hl.read_only, ["%"] = hl.read_only,
+        ["/"] = hl.last_search,
+        ["-"] = hl.delete,
+        ["0"] = hl.yank,
+        ["1"] = hl.history, ["2"] = hl.history, ["3"] = hl.history, ["4"] = hl.history, ["5"] = hl.history,
+        ["6"] = hl.history, ["7"] = hl.history, ["8"] = hl.history, ["9"] = hl.history,
+        a = hl.named, b = hl.named, c = hl.named, d = hl.named, e = hl.named, f = hl.named, g = hl.named, h = hl.named,
+        i = hl.named, j = hl.named, k = hl.named, l = hl.named, m = hl.named, n = hl.named, o = hl.named, p = hl.named,
+        q = hl.named, r = hl.named, s = hl.named, t = hl.named, u = hl.named, v = hl.named, w = hl.named, x = hl.named,
+        y = hl.named, z = hl.named,
+    })[register]
 end
 
 ---All available registers.
