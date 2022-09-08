@@ -30,6 +30,7 @@ options                                                                *options*
         {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys
         {symbols}                (symbols_options)            Symbols used to replace text in the previous buffer.
         {window}                 (window_options)             Floating window
+        {sign_highlights}        (sign_highlights_options)    Highlights for the sign section of the window
 
 
 bind_keys_options                                            *bind_keys_options*
@@ -75,6 +76,22 @@ window_options                                                  *window_options*
         {max_width}             (number?)         Maximum width of the window, normal size will be calculated based on the size of the longest register
         {highlight_cursorline}  (boolean?)        Whether to create key mappings for the register values inside the window
         {border}                (window_border?)  Border style of the window
+
+
+sign_highlights_options                                *sign_highlights_options*
+    `require("registers").setup({ sign_highlights = {...} })`
+
+    Fields: ~
+        {cursorline}   (string?)  Highlight group for when the cursor is over the line
+        {selection}    (string?)  Highlight group for the selection registers, `*+`
+        {default}      (string?)  Highlight group for the default register, `"`
+        {unnamed}      (string?)  Highlight group for the unnamed register, `\\`
+        {read_only}    (string?)  Highlight group for the read only registers, `:.%`
+        {last_search}  (string?)  Highlight group for the last search register, `/`
+        {delete}       (string?)  Highlight group for the delete register, `-`
+        {yank}         (string?)  Highlight group for the yank register, `0`
+        {history}      (string?)  Highlight group for the history registers, `1-9`
+        {named}        (string?)  Highlight group for the named registers, `a-z`
 
 
 ================================================================================
