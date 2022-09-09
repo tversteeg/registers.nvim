@@ -20,6 +20,7 @@
 ---@mod options `registers.setup` configuration options
 ---@class options `require("registers").setup({...})`
 ---@field show string Which registers to show and in what order
+---@field show_empty boolean Show the registers which aren't filled in a separate line
 ---@field delay number How long, in seconds, to wait before opening the window
 ---@field register_user_command boolean Whether to register the `:Registers` user command
 ---@field system_clipboard boolean Transfer selected register to the system clipboard
@@ -32,6 +33,7 @@
 ---@type options default values for all options
 local DEFAULT_OPTIONS = {
     show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
+    show_empty = true,
     register_user_command = true,
     system_clipboard = true,
     trim_whitespace = true,
@@ -271,6 +273,12 @@ function registers._create_window(mode)
         window_width = math.min(registers._longest_register_length())
     end
 
+    -- Height is based on the amount of available registers
+    local window_height = #registers._register_values
+    if registers.options.show_empty then
+        window_height = window_height + 1
+    end
+
     -- Create the floating window
     local window_options = {
         -- Place the window next to the cursor
@@ -280,7 +288,7 @@ function registers._create_window(mode)
         -- Width of the window
         width = window_width,
         -- Height of the window
-        height = #registers._register_values,
+        height = window_height,
         -- Place the new window just under the cursor
         row = 1,
         col = 0,
@@ -338,22 +346,23 @@ function registers._read_registers()
 
             -- The register contents as a single line
             local line = table.concat(register_info.regcontents, registers.options.symbols.newline)
+            if line and type(line) == "string" then
+                -- Trim the whitespace if applicable
+                if registers.options.trim_whitespace then
+                    line = line:match("^%s*(.-)%s*$")
+                end
 
-            -- Trim the whitespace if applicable
-            if registers.options.trim_whitespace then
-                line = line:match("^%s*(.-)%s*$")
+                -- Replace newline characters
+                line = line:gsub("[\n\r]", registers.options.symbols.newline)
+                    -- Replace tab characters
+                    :gsub("\t", registers.options.symbols.tab)
+                    -- Replace space characters
+                    :gsub(" ", registers.options.symbols.space)
+
+                register_info.line = line
+
+                registers._register_values[#registers._register_values + 1] = register_info
             end
-
-            -- Replace newline characters
-            line = line:gsub("[\n\r]", registers.options.symbols.newline)
-                -- Replace tab characters
-                :gsub("\t", registers.options.symbols.tab)
-                -- Replace space characters
-                :gsub(" ", registers.options.symbols.space)
-
-            register_info.line = line
-
-            registers._register_values[#registers._register_values + 1] = register_info
         end
     end
 end
@@ -367,6 +376,11 @@ function registers._fill_window()
         local register = registers._register_values[i]
 
         lines[i] = register.line
+    end
+
+    -- Add the empty line
+    if registers.options.show_empty then
+        lines[#lines + 1] = "Empty: "
     end
 
     -- Write the lines to the buffer
@@ -457,6 +471,11 @@ end
 function registers._apply_register(register)
     -- Get the register symbol also when selecting it manually
     register = registers._register_symbol(register)
+
+    -- Do nothing if no valid register is chosen
+    if not register then
+        return
+    end
 
     -- Close the window
     registers.close()
@@ -571,13 +590,18 @@ end
 
 ---Get the register or when it's `nil` the selected register from the cursor.
 ---@param register string? Register to look up, if nothing is passed the current line will be used
----@return string The register or the current line
+---@return string? The register or the current line, if applicable
 ---@nodiscard
 ---@private
 function registers._register_symbol(register)
     if register == nil then
         -- A register is selected by the cursor, get it based on the current line
         local cursor = unpack(vim.api.nvim_win_get_cursor(registers._window))
+
+        if #registers._register_values < cursor then
+            -- The empty section has been chosen, it doesn't select anything
+            return nil
+        end
 
         return registers._register_values[cursor].register
     else
