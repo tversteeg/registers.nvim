@@ -23,6 +23,7 @@ options                                                                *options*
 
     Fields: ~
         {show}                   (string)                     Which registers to show and in what order
+        {show_empty}             (boolean)                    Show the registers which aren't filled in a separate line
         {delay}                  (number)                     How long, in seconds, to wait before opening the window
         {register_user_command}  (boolean)                    Whether to register the `:Registers` user command
         {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard
