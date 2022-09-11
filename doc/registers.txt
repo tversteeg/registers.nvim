@@ -48,15 +48,6 @@ bind_keys_options                                            *bind_keys_options*
         {ctrl_k}     (boolean)  Map <C-K> to move up in the registers window. Default is `true`.
 
 
-symbols_options                                                *symbols_options*
-    `require("registers").setup({ symbols = {...} })`
-
-    Fields: ~
-        {newline}  (string?)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
-        {space}    (string?)  Symbol to show for a space character. Default is `" "`.
-        {tab}      (string?)  Symbol to show for a tab character. Default is `"·"`.
-
-
 window_border                                                    *window_border*
 
 
@@ -77,6 +68,15 @@ window_options                                                  *window_options*
         {max_width}             (number?)         Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
         {highlight_cursorline}  (boolean?)        Whether to create key mappings for the register values inside the window. Default is `true`.
         {border}                (window_border?)  Border style of the window. Default is `"none"`.
+
+
+symbols_options                                                *symbols_options*
+    `require("registers").setup({ symbols = {...} })`
+
+    Fields: ~
+        {newline}  (string?)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
+        {space}    (string?)  Symbol to show for a space character. Default is `" "`.
+        {tab}      (string?)  Symbol to show for a tab character. Default is `"·"`.
 
 
 sign_highlights_options                                *sign_highlights_options*
