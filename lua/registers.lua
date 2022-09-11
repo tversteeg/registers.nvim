@@ -17,21 +17,63 @@
 ---<
 ---@brief ]]
 
----@mod options `registers.setup` configuration options
+---@mod options `registers.setup` configuration options.
 ---@class options `require("registers").setup({...})`
----@field show string Which registers to show and in what order
----@field show_empty boolean Show the registers which aren't filled in a separate line
----@field delay number How long, in seconds, to wait before opening the window
----@field register_user_command boolean Whether to register the `:Registers` user command
----@field system_clipboard boolean Transfer selected register to the system clipboard
----@field trim_whitespace boolean Don't show whitespace at the begin and and of the registers, won't change the output from applying the register
----@field bind_keys bind_keys_options|boolean Which keys to bind, `true` maps all keys and `false` maps no keys
+---@field show string Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
+---@field show_empty boolean Show the registers which aren't filled in a separate line. Default is `true`.
+---@field delay number How long, in seconds, to wait before opening the window. Default is `0`.
+---@field register_user_command boolean Whether to register the `:Registers` user command. Default is `true`.
+---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
+---@field trim_whitespace boolean Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
+---@field bind_keys bind_keys_options|boolean Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
 ---@field symbols symbols_options Symbols used to replace text in the previous buffer.
 ---@field window window_options Floating window
 ---@field sign_highlights sign_highlights_options Highlights for the sign section of the window
 
+---@class bind_keys_options `require("registers").setup({ bind_keys = {...} })`
+---@field normal boolean Map " in normal mode to display the registers window. Default is `true`.
+---@field insert boolean Map <C-R> in insert mode to display the registers window. Default is `true`.
+---@field visual boolean Map " in visual mode to display the registers window. Default is `true`.
+---@field registers boolean Map all register keys in the registers window. Default is `true`.
+---@field ctrl_n boolean Map <C-N> to move down in the registers window. Default is `true`.
+---@field ctrl_p boolean Map <C-P> to move up in the registers window. Default is `true`.
+---@field ctrl_j boolean Map <C-J> to move down in the registers window. Default is `true`.
+---@field ctrl_k boolean Map <C-K> to move up in the registers window. Default is `true`.
+
+---@alias window_border
+---| "none"
+---| "single"
+---| "double"
+---| "rounded"
+---| "solid"
+---| "shadow"
+---| string[] # An array of eight strings which each corner and side character.
+
+---@class window_options `require("registers").setup({ window = {...} })`
+---@field max_width number? Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
+---@field highlight_cursorline boolean? Whether to create key mappings for the register values inside the window. Default is `true`.
+---@field border window_border? Border style of the window. Default is `"none"`.
+
+---@class symbols_options `require("registers").setup({ symbols = {...} })`
+---@field newline string? Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
+---@field space string? Symbol to show for a space character. Default is `" "`.
+---@field tab string? Symbol to show for a tab character. Default is `"·"`.
+
+---@class sign_highlights_options `require("registers").setup({ sign_highlights = {...} })`
+---@field cursorline string? Highlight group for when the cursor is over the line. Default is `"Visual"`.
+---@field selection string? Highlight group for the selection registers, `*+`. Default is `"Constant"`.
+---@field default string? Highlight group for the default register, `"`. Default is `"Function"`.
+---@field unnamed string? Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
+---@field read_only string? Highlight group for the read only registers, `:.%`. Default is `"Type"`.
+---@field last_search string? Highlight group for the last search register, `/`. Default is `"Tag"`.
+---@field delete string? Highlight group for the delete register, `-`. Default is `"Special"`.
+---@field yank string? Highlight group for the yank register, `0`. Default is `"Delimiter"`.
+---@field history string? Highlight group for the history registers, `1-9`. Default is `"Number"`.
+---@field named string? Highlight group for the named registers, `a-z`. Default is `"Todo"`.
+
 ---@type options default values for all options
-local DEFAULT_OPTIONS = {
+local DEFAULT_OPTIONS =
+{
     show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
     show_empty = true,
     register_user_command = true,
@@ -39,15 +81,6 @@ local DEFAULT_OPTIONS = {
     trim_whitespace = true,
     delay = 0,
 
-    ---@class bind_keys_options `require("registers").setup({ bind_keys = {...} })`
-    ---@field normal boolean Map " in normal mode to display the registers window
-    ---@field insert boolean Map <C-R> in insert mode to display the registers window
-    ---@field visual boolean Map " in visual mode to display the registers window
-    ---@field registers boolean Map all register keys in the registers window
-    ---@field ctrl_n boolean Map <C-N> to move down in the registers window
-    ---@field ctrl_p boolean Map <C-P> to move up in the registers window
-    ---@field ctrl_j boolean Map <C-J> to move down in the registers window
-    ---@field ctrl_k boolean Map <C-K> to move up in the registers window
     bind_keys = {
         normal = true,
         insert = true,
@@ -59,46 +92,18 @@ local DEFAULT_OPTIONS = {
         ctrl_k = true,
     },
 
-    ---@class symbols_options `require("registers").setup({ symbols = {...} })`
-    ---@field newline string? Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead
-    ---@field space string? Symbol to show for a space character
-    ---@field tab string? Symbol to show for a tab character
     symbols = {
         newline = "⏎",
         space = " ",
         tab = "·",
     },
 
-    ---@alias window_border
-    ---| "none"
-    ---| "single"
-    ---| "double"
-    ---| "rounded"
-    ---| "solid"
-    ---| "shadow"
-    ---| string[] # An array of eight strings which each corner and side character
-
-    ---@class window_options `require("registers").setup({ window = {...} })`
-    ---@field max_width number? Maximum width of the window, normal size will be calculated based on the size of the longest register
-    ---@field highlight_cursorline boolean? Whether to create key mappings for the register values inside the window
-    ---@field border window_border? Border style of the window
     window = {
         max_width = 100,
         highlight_cursorline = true,
         border = "none",
     },
 
-    ---@class sign_highlights_options `require("registers").setup({ sign_highlights = {...} })`
-    ---@field cursorline string? Highlight group for when the cursor is over the line
-    ---@field selection string? Highlight group for the selection registers, `*+`
-    ---@field default string? Highlight group for the default register, `"`
-    ---@field unnamed string? Highlight group for the unnamed register, `\\`
-    ---@field read_only string? Highlight group for the read only registers, `:.%`
-    ---@field last_search string? Highlight group for the last search register, `/`
-    ---@field delete string? Highlight group for the delete register, `-`
-    ---@field yank string? Highlight group for the yank register, `0`
-    ---@field history string? Highlight group for the history registers, `1-9`
-    ---@field named string? Highlight group for the named registers, `a-z`
     sign_highlights = {
         cursorline = "Visual",
         selection = "Constant",
@@ -130,7 +135,7 @@ local registers = {}
 ---Let the user configure this plugin.
 ---
 ---This will also register the default user commands and key bindings.
----@param options options? Plugin configuration options
+---@param options options? Plugin configuration options.
 ---@usage `require("registers").setup({})`
 function registers.setup(options)
     -- Ensure that we have the proper neovim version
@@ -181,12 +186,12 @@ function registers.setup(options)
 end
 
 ---@alias register_mode
----| "insert" # Insert the register's contents like when in insert mode and pressing <C-R>
----| "paste" # Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode
----| "motion" # Create a motion from the register, similar to pressing "*reg* (without pasting it yet)
+---| "insert" # Insert the register's contents like when in insert mode and pressing <C-R>.
+---| "paste" # Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode.
+---| "motion" # Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 ---Popup the registers window.
----@param mode register_mode? How the registers window should handle the selection of registers
+---@param mode register_mode? How the registers window should handle the selection of registers.
 ---@usage [[
 ----- Disable all key bindings
 ---require("registers").setup({ bind_keys = false })

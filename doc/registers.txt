@@ -16,19 +16,19 @@ use {
 <
 
 ================================================================================
-`registers.setup` configuration options                                *options*
+`registers.setup` configuration options.                               *options*
 
 options                                                                *options*
     `require("registers").setup({...})`
 
     Fields: ~
-        {show}                   (string)                     Which registers to show and in what order
-        {show_empty}             (boolean)                    Show the registers which aren't filled in a separate line
-        {delay}                  (number)                     How long, in seconds, to wait before opening the window
-        {register_user_command}  (boolean)                    Whether to register the `:Registers` user command
-        {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard
-        {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register
-        {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys
+        {show}                   (string)                     Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
+        {show_empty}             (boolean)                    Show the registers which aren't filled in a separate line. Default is `true`.
+        {delay}                  (number)                     How long, in seconds, to wait before opening the window. Default is `0`.
+        {register_user_command}  (boolean)                    Whether to register the `:Registers` user command. Default is `true`.
+        {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard. Default is `true`.
+        {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
+        {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
         {symbols}                (symbols_options)            Symbols used to replace text in the previous buffer.
         {window}                 (window_options)             Floating window
         {sign_highlights}        (sign_highlights_options)    Highlights for the sign section of the window
@@ -38,23 +38,23 @@ bind_keys_options                                            *bind_keys_options*
     `require("registers").setup({ bind_keys = {...} })`
 
     Fields: ~
-        {normal}     (boolean)  Map " in normal mode to display the registers window
-        {insert}     (boolean)  Map <C-R> in insert mode to display the registers window
-        {visual}     (boolean)  Map " in visual mode to display the registers window
-        {registers}  (boolean)  Map all register keys in the registers window
-        {ctrl_n}     (boolean)  Map <C-N> to move down in the registers window
-        {ctrl_p}     (boolean)  Map <C-P> to move up in the registers window
-        {ctrl_j}     (boolean)  Map <C-J> to move down in the registers window
-        {ctrl_k}     (boolean)  Map <C-K> to move up in the registers window
+        {normal}     (boolean)  Map " in normal mode to display the registers window. Default is `true`.
+        {insert}     (boolean)  Map <C-R> in insert mode to display the registers window. Default is `true`.
+        {visual}     (boolean)  Map " in visual mode to display the registers window. Default is `true`.
+        {registers}  (boolean)  Map all register keys in the registers window. Default is `true`.
+        {ctrl_n}     (boolean)  Map <C-N> to move down in the registers window. Default is `true`.
+        {ctrl_p}     (boolean)  Map <C-P> to move up in the registers window. Default is `true`.
+        {ctrl_j}     (boolean)  Map <C-J> to move down in the registers window. Default is `true`.
+        {ctrl_k}     (boolean)  Map <C-K> to move up in the registers window. Default is `true`.
 
 
 symbols_options                                                *symbols_options*
     `require("registers").setup({ symbols = {...} })`
 
     Fields: ~
-        {newline}  (string?)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead
-        {space}    (string?)  Symbol to show for a space character
-        {tab}      (string?)  Symbol to show for a tab character
+        {newline}  (string?)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
+        {space}    (string?)  Symbol to show for a space character. Default is `" "`.
+        {tab}      (string?)  Symbol to show for a tab character. Default is `"·"`.
 
 
 window_border                                                    *window_border*
@@ -67,32 +67,32 @@ window_border                                                    *window_border*
         ("rounded")
         ("solid")
         ("shadow")
-        (string[])   An array of eight strings which each corner and side character
+        (string[])   An array of eight strings which each corner and side character.
 
 
 window_options                                                  *window_options*
     `require("registers").setup({ window = {...} })`
 
     Fields: ~
-        {max_width}             (number?)         Maximum width of the window, normal size will be calculated based on the size of the longest register
-        {highlight_cursorline}  (boolean?)        Whether to create key mappings for the register values inside the window
-        {border}                (window_border?)  Border style of the window
+        {max_width}             (number?)         Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
+        {highlight_cursorline}  (boolean?)        Whether to create key mappings for the register values inside the window. Default is `true`.
+        {border}                (window_border?)  Border style of the window. Default is `"none"`.
 
 
 sign_highlights_options                                *sign_highlights_options*
     `require("registers").setup({ sign_highlights = {...} })`
 
     Fields: ~
-        {cursorline}   (string?)  Highlight group for when the cursor is over the line
-        {selection}    (string?)  Highlight group for the selection registers, `*+`
-        {default}      (string?)  Highlight group for the default register, `"`
-        {unnamed}      (string?)  Highlight group for the unnamed register, `\\`
-        {read_only}    (string?)  Highlight group for the read only registers, `:.%`
-        {last_search}  (string?)  Highlight group for the last search register, `/`
-        {delete}       (string?)  Highlight group for the delete register, `-`
-        {yank}         (string?)  Highlight group for the yank register, `0`
-        {history}      (string?)  Highlight group for the history registers, `1-9`
-        {named}        (string?)  Highlight group for the named registers, `a-z`
+        {cursorline}   (string?)  Highlight group for when the cursor is over the line. Default is `"Visual"`.
+        {selection}    (string?)  Highlight group for the selection registers, `*+`. Default is `"Constant"`.
+        {default}      (string?)  Highlight group for the default register, `"`. Default is `"Function"`.
+        {unnamed}      (string?)  Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
+        {read_only}    (string?)  Highlight group for the read only registers, `:.%`. Default is `"Type"`.
+        {last_search}  (string?)  Highlight group for the last search register, `/`. Default is `"Tag"`.
+        {delete}       (string?)  Highlight group for the delete register, `-`. Default is `"Special"`.
+        {yank}         (string?)  Highlight group for the yank register, `0`. Default is `"Delimiter"`.
+        {history}      (string?)  Highlight group for the history registers, `1-9`. Default is `"Number"`.
+        {named}        (string?)  Highlight group for the named registers, `a-z`. Default is `"Todo"`.
 
 
 ================================================================================
@@ -111,7 +111,7 @@ registers.setup({options})                                     *registers.setup*
     This will also register the default user commands and key bindings.
 
     Parameters: ~
-        {options}  (options?)  Plugin configuration options
+        {options}  (options?)  Plugin configuration options.
 
     Usage: ~
         >
@@ -123,16 +123,16 @@ register_mode                                                    *register_mode*
 
 
     Variants: ~
-        ("insert")  Insert the register's contents like when in insert mode and pressing <C-R>
-        ("paste")   Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode
-        ("motion")  Create a motion from the register, similar to pressing "*reg* (without pasting it yet)
+        ("insert")  Insert the register's contents like when in insert mode and pressing <C-R>.
+        ("paste")   Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode.
+        ("motion")  Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 
 registers.show({mode})                                          *registers.show*
     Popup the registers window.
 
     Parameters: ~
-        {mode}  (register_mode?)  How the registers window should handle the selection of registers
+        {mode}  (register_mode?)  How the registers window should handle the selection of registers.
 
     Usage: ~
         >

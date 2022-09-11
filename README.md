@@ -45,4 +45,57 @@ use {
 
 ## Configuration
 
-Configuration options can be found in Neovim [`:h registers`](doc/registers.txt).
+This plugin can be configured by passing a table to `require("registers").setup({})`.
+Configuration options can be found in Neovim's documentation after installing with: [`:h registers`](doc/registers.txt).
+
+### Default values
+
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=76-119) -->
+<!-- The below code snippet is automatically added from ./lua/registers.lua -->
+```lua
+{
+    show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
+    show_empty = true,
+    register_user_command = true,
+    system_clipboard = true,
+    trim_whitespace = true,
+    delay = 0,
+
+    bind_keys = {
+        normal = true,
+        insert = true,
+        visual = true,
+        registers = true,
+        ctrl_n = true,
+        ctrl_p = true,
+        ctrl_j = true,
+        ctrl_k = true,
+    },
+
+    symbols = {
+        newline = "⏎",
+        space = " ",
+        tab = "·",
+    },
+
+    window = {
+        max_width = 100,
+        highlight_cursorline = true,
+        border = "none",
+    },
+
+    sign_highlights = {
+        cursorline = "Visual",
+        selection = "Constant",
+        default = "Function",
+        unnamed = "Statement",
+        read_only = "Type",
+        last_search = "Tag",
+        delete = "Special",
+        yank = "Delimiter",
+        history = "Number",
+        named = "Todo",
+    },
+}
+```
+<!-- MARKDOWN-AUTO-DOCS:END -->
