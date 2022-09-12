@@ -83,16 +83,19 @@ sign_highlights_options                                *sign_highlights_options*
     `require("registers").setup({ sign_highlights = {...} })`
 
     Fields: ~
-        {cursorline}   (string?)  Highlight group for when the cursor is over the line. Default is `"Visual"`.
-        {selection}    (string?)  Highlight group for the selection registers, `*+`. Default is `"Constant"`.
-        {default}      (string?)  Highlight group for the default register, `"`. Default is `"Function"`.
-        {unnamed}      (string?)  Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
-        {read_only}    (string?)  Highlight group for the read only registers, `:.%`. Default is `"Type"`.
-        {last_search}  (string?)  Highlight group for the last search register, `/`. Default is `"Tag"`.
-        {delete}       (string?)  Highlight group for the delete register, `-`. Default is `"Special"`.
-        {yank}         (string?)  Highlight group for the yank register, `0`. Default is `"Delimiter"`.
-        {history}      (string?)  Highlight group for the history registers, `1-9`. Default is `"Number"`.
-        {named}        (string?)  Highlight group for the named registers, `a-z`. Default is `"Todo"`.
+        {cursorline}        (string?)  Highlight group for when the cursor is over the line. Default is `"Visual"`.
+        {selection}         (string?)  Highlight group for the selection registers, `*+`. Default is `"Constant"`.
+        {default}           (string?)  Highlight group for the default register, `"`. Default is `"Function"`.
+        {unnamed}           (string?)  Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
+        {read_only}         (string?)  Highlight group for the read only registers, `:.%`. Default is `"Type"`.
+        {alternate_buffer}  (string?)  Highlight group for the alternate buffer register, `#`. Default is `"Type"`.
+        {expression}        (string?)  Highlight group for the expression register, `=`. Default is `"Exception"`.
+        {black_hole}        (string?)  Highlight group for the black hole register, `_`. Default is `"Error"`.
+        {last_search}       (string?)  Highlight group for the last search register, `/`. Default is `"Operator"`.
+        {delete}            (string?)  Highlight group for the delete register, `-`. Default is `"Special"`.
+        {yank}              (string?)  Highlight group for the yank register, `0`. Default is `"Delimiter"`.
+        {history}           (string?)  Highlight group for the history registers, `1-9`. Default is `"Number"`.
+        {named}             (string?)  Highlight group for the named registers, `a-z`. Default is `"Todo"`.
 
 
 ================================================================================
