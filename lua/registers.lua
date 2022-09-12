@@ -65,7 +65,10 @@
 ---@field default string? Highlight group for the default register, `"`. Default is `"Function"`.
 ---@field unnamed string? Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
 ---@field read_only string? Highlight group for the read only registers, `:.%`. Default is `"Type"`.
----@field last_search string? Highlight group for the last search register, `/`. Default is `"Tag"`.
+---@field alternate_buffer string? Highlight group for the alternate buffer register, `#`. Default is `"Type"`.
+---@field expression string? Highlight group for the expression register, `=`. Default is `"Exception"`.
+---@field black_hole string? Highlight group for the black hole register, `_`. Default is `"Error"`.
+---@field last_search string? Highlight group for the last search register, `/`. Default is `"Operator"`.
 ---@field delete string? Highlight group for the delete register, `-`. Default is `"Special"`.
 ---@field yank string? Highlight group for the yank register, `0`. Default is `"Delimiter"`.
 ---@field history string? Highlight group for the history registers, `1-9`. Default is `"Number"`.
@@ -110,6 +113,9 @@ local DEFAULT_OPTIONS =
         default = "Function",
         unnamed = "Statement",
         read_only = "Type",
+        expression = "Exception",
+        black_hole = "Error",
+        alternate_buffer = "Operator",
         last_search = "Tag",
         delete = "Special",
         yank = "Delimiter",
@@ -129,6 +135,7 @@ local DEFAULT_OPTIONS =
 ---@field private _window integer?
 ---@field private _buffer integer?
 ---@field private _register_values { regcontents: string, line: string, register: string }[]
+---@field private _empty_registers string[]
 ---@field private _mappings table<string, function>
 local registers = {}
 
@@ -334,6 +341,7 @@ end
 ---@private
 function registers._read_registers()
     registers._register_values = {}
+    registers._empty_registers = {}
 
     -- Read all register information
     local show = registers.options.show
@@ -368,6 +376,9 @@ function registers._read_registers()
 
                 registers._register_values[#registers._register_values + 1] = register_info
             end
+        else
+            -- Place it in the empty registers
+            registers._empty_registers[#registers._empty_registers + 1] = register
         end
     end
 end
@@ -385,7 +396,7 @@ function registers._fill_window()
 
     -- Add the empty line
     if registers.options.show_empty then
-        lines[#lines + 1] = "Empty: "
+        lines[#lines + 1] = "Empty: " .. table.concat(registers._empty_registers, " ")
     end
 
     -- Write the lines to the buffer
@@ -574,6 +585,34 @@ function registers._define_highlights()
     vim.cmd([[syntax match RegistersEscaped "\\\w"]])
     vim.cmd([[syntax keyword RegistersEscaped \.]])
     vim.api.nvim_set_hl(registers._namespace, "RegistersEscaped", { link = "Special" })
+
+    -- Empty region
+    function hl_symbol(type, symbols, group)
+        local name = "RegistersSymbol_" .. group
+        if type == "match" then
+            vim.cmd(("syntax match %s %q contained"):format(name, symbols))
+        else
+            vim.cmd(("syntax %s %s %s contained"):format(type, name, symbols))
+        end
+        vim.api.nvim_set_hl(registers._namespace, name, { link = registers.options.sign_highlights[group] })
+    end
+
+    hl_symbol("match", "[*+]", "selection")
+    hl_symbol("match", "\\\"", "default")
+    hl_symbol("match", "\\\\", "unnamed")
+    hl_symbol("match", "[:.%]", "read_only")
+    hl_symbol("match", "_", "black_hole")
+    hl_symbol("match", "=", "expression")
+    hl_symbol("match", "#", "alternate_buffer")
+    hl_symbol("match", "\\/", "last_search")
+    hl_symbol("match", "-", "delete")
+    hl_symbol("keyword", "0", "yank")
+    hl_symbol("keyword", "1 2 3 4 5 6 7 8 9", "history")
+    hl_symbol("keyword", "a b c d e f g h i j k l m n o p q r s t u v w x y z", "named")
+
+    vim.cmd([[syntax match RegistersEmptyString "Empty: " contained]])
+
+    vim.cmd([[syntax region RegistersEmpty start="^Empty: " end="$" contains=RegistersSymbol.*,RegistersEmptyString]])
 end
 
 ---Get the length of the longest register.
@@ -665,6 +704,9 @@ function registers._highlight_for_sign(register)
         [":"] = hl.read_only, ["."] = hl.read_only, ["%"] = hl.read_only,
         ["/"] = hl.last_search,
         ["-"] = hl.delete,
+        ["_"] = hl.black_hole,
+        ["="] = hl.expression,
+        ["#"] = hl.alternate_buffer,
         ["0"] = hl.yank,
         ["1"] = hl.history, ["2"] = hl.history, ["3"] = hl.history, ["4"] = hl.history, ["5"] = hl.history,
         ["6"] = hl.history, ["7"] = hl.history, ["8"] = hl.history, ["9"] = hl.history,
