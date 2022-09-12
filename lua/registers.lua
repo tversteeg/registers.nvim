@@ -21,6 +21,7 @@
 ---@class options `require("registers").setup({...})`
 ---@field show string Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
 ---@field show_empty boolean Show the registers which aren't filled in a separate line. Default is `true`.
+---@field paste_in_normal_mode boolean Instead of keeping the register selectable as per the default behavior immediately paste it. Default is `false`.
 ---@field delay number How long, in seconds, to wait before opening the window. Default is `0`.
 ---@field register_user_command boolean Whether to register the `:Registers` user command. Default is `true`.
 ---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
@@ -82,6 +83,7 @@ local DEFAULT_OPTIONS =
     register_user_command = true,
     system_clipboard = true,
     trim_whitespace = true,
+    paste_in_normal_mode = false,
     delay = 0,
 
     bind_keys = {
@@ -540,7 +542,7 @@ function registers._apply_register(register)
             end
 
             -- Paste the register if applicable
-            if registers._mode == "paste" then
+            if registers._mode == "paste" or registers._previous_mode == "n" and registers.options.paste_in_normal_mode then
                 keys = keys .. "p"
             end
 

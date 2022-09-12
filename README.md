@@ -50,17 +50,16 @@ Configuration options can be found in Neovim's documentation after installing wi
 
 ### Default values
 
-<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=76-119) -->
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=80-127) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 ```lua
----@type options default values for all options
-local DEFAULT_OPTIONS =
 {
     show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
     show_empty = true,
     register_user_command = true,
     system_clipboard = true,
     trim_whitespace = true,
+    paste_in_normal_mode = false,
     delay = 0,
 
     bind_keys = {
@@ -96,5 +95,11 @@ local DEFAULT_OPTIONS =
         black_hole = "Error",
         alternate_buffer = "Operator",
         last_search = "Tag",
+        delete = "Special",
+        yank = "Delimiter",
+        history = "Number",
+        named = "Todo",
+    },
+}
 ```
 <!-- MARKDOWN-AUTO-DOCS:END -->
