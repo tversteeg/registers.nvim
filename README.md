@@ -53,6 +53,8 @@ Configuration options can be found in Neovim's documentation after installing wi
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=76-119) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 ```lua
+---@type options default values for all options
+local DEFAULT_OPTIONS =
 {
     show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
     show_empty = true,
@@ -90,12 +92,9 @@ Configuration options can be found in Neovim's documentation after installing wi
         default = "Function",
         unnamed = "Statement",
         read_only = "Type",
+        expression = "Exception",
+        black_hole = "Error",
+        alternate_buffer = "Operator",
         last_search = "Tag",
-        delete = "Special",
-        yank = "Delimiter",
-        history = "Number",
-        named = "Todo",
-    },
-}
 ```
 <!-- MARKDOWN-AUTO-DOCS:END -->
