@@ -553,7 +553,7 @@ function registers._apply_register(register)
     -- Copy the selected register to the system clipboard if applicable
     if registers.options.system_clipboard then
         if vim.fn.has("clipboard") == 1 then
-            vim.cmd("let @*=@" .. register)
+            vim.cmd("let @+=@" .. register)
         else
             vim.api.nvim_err_writeln("No clipboard available")
         end
