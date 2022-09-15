@@ -469,7 +469,7 @@ function registers._fill_mappings()
     }
 
     -- Create mappings for the register keys if applicable
-    if registers._key_should_be_bound("registers") then
+    if registers.options.bind_keys then
         for _, register in ipairs(registers._all_registers) do
             local register_func = function() registers.options.bind_keys.register_key(register, registers._mode) end
 
