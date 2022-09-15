@@ -563,17 +563,22 @@ end
 ---Register the highlights.
 ---@private
 function registers._define_highlights()
-    -- Set the namespace for the highlights on the window
-    vim.api.nvim_win_set_hl_ns(registers._window, registers._namespace)
+    -- Set the namespace for the highlights on the window, if we're running an older neovim version make it global
+    ---@type integer|string
+    local namespace = 0
+    if vim.fn.has("nvim-0.8.0") == 1 then
+        namespace = registers._namespace
+        vim.api.nvim_win_set_hl_ns(registers._window, namespace)
+    end
 
     -- Define the matches and link them
     vim.cmd([[syntax match RegistersNumber "\d\+"]])
     vim.cmd([[syntax match RegistersNumber "[-+]\d\+\.\d\+"]])
-    vim.api.nvim_set_hl(registers._namespace, "RegistersNumber", { link = "Number" })
+    vim.api.nvim_set_hl(namespace, "RegistersNumber", { link = "Number" })
 
     vim.cmd([[syntax region RegistersString start=+"+ skip=+\\"+ end=+"+]])
     vim.cmd([[syntax region RegistersString start=+'+ skip=+\\'+ end=+'+]])
-    vim.api.nvim_set_hl(registers._namespace, "RegistersString", { link = "String" })
+    vim.api.nvim_set_hl(namespace, "RegistersString", { link = "String" })
 
     -- ⏎
     vim.cmd([[syntax match RegistersWhitespace "\%u23CE"]])
@@ -582,11 +587,11 @@ function registers._define_highlights()
     -- ·
     vim.cmd([[syntax match RegistersWhitespace "\%u00B7"]])
     vim.cmd([[syntax match RegistersWhitespace " "]])
-    vim.api.nvim_set_hl(registers._namespace, "RegistersWhitespace", { link = "Comment" })
+    vim.api.nvim_set_hl(namespace, "RegistersWhitespace", { link = "Comment" })
 
     vim.cmd([[syntax match RegistersEscaped "\\\w"]])
     vim.cmd([[syntax keyword RegistersEscaped \.]])
-    vim.api.nvim_set_hl(registers._namespace, "RegistersEscaped", { link = "Special" })
+    vim.api.nvim_set_hl(namespace, "RegistersEscaped", { link = "Special" })
 
     -- Empty region
     function hl_symbol(type, symbols, group)
@@ -596,7 +601,7 @@ function registers._define_highlights()
         else
             vim.cmd(("syntax %s %s %s contained"):format(type, name, symbols))
         end
-        vim.api.nvim_set_hl(registers._namespace, name, { link = registers.options.sign_highlights[group] })
+        vim.api.nvim_set_hl(namespace, name, { link = registers.options.sign_highlights[group] })
     end
 
     hl_symbol("match", "[*+]", "selection")
