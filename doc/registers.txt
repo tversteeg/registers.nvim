@@ -42,6 +42,15 @@ options                                                                *options*
         {sign_highlights}        (sign_highlights_options)    Highlights for the sign section of the window
 
 
+register_mode                                                    *register_mode*
+
+
+    Variants: ~
+        ("insert")  Insert the register's contents like when in insert mode and pressing <C-R>.
+        ("paste")   Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode.
+        ("motion")  Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
+
+
 bind_keys_options                                            *bind_keys_options*
     `require("registers").setup({ bind_keys = {...} })`
 
@@ -130,15 +139,6 @@ registers.setup({options})                                     *registers.setup*
         >
             require("registers").setup({})
         <
-
-
-register_mode                                                    *register_mode*
-
-
-    Variants: ~
-        ("insert")  Insert the register's contents like when in insert mode and pressing <C-R>.
-        ("paste")   Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode.
-        ("motion")  Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 
 registers.show_window({mode})                            *registers.show_window*
