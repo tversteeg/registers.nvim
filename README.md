@@ -52,56 +52,54 @@ Configuration options can be found in Neovim's documentation after installing wi
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=102-149) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
-
 ```lua
-{
-    show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
-    show_empty = true,
-    register_user_command = true,
-    system_clipboard = true,
-    trim_whitespace = true,
-    paste_in_normal_mode = false,
-    delay = 0,
+        show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
+        show_empty = true,
+        register_user_command = true,
+        system_clipboard = true,
+        trim_whitespace = true,
+        paste_in_normal_mode = false,
+        delay = 0,
 
-    bind_keys = {
-        normal = true,
-        insert = true,
-        visual = true,
-        registers = true,
-        ctrl_n = true,
-        ctrl_p = true,
-        ctrl_j = true,
-        ctrl_k = true,
-    },
+        bind_keys = {
+            normal = true,
+            insert = true,
+            visual = true,
+            register_key = registers.apply_register,
+            return_key = registers.apply_register,
+            escape_key = registers.close_window,
+            ctrl_n = true,
+            ctrl_p = true,
+            ctrl_j = true,
+            ctrl_k = true,
+        },
 
-    symbols = {
-        newline = "⏎",
-        space = " ",
-        tab = "·",
-    },
+        symbols = {
+            newline = "⏎",
+            space = " ",
+            tab = "·",
+        },
 
-    window = {
-        max_width = 100,
-        highlight_cursorline = true,
-        border = "none",
-    },
+        window = {
+            max_width = 100,
+            highlight_cursorline = true,
+            border = "none",
+        },
 
-    sign_highlights = {
-        cursorline = "Visual",
-        selection = "Constant",
-        default = "Function",
-        unnamed = "Statement",
-        read_only = "Type",
-        expression = "Exception",
-        black_hole = "Error",
-        alternate_buffer = "Operator",
-        last_search = "Tag",
-        delete = "Special",
-        yank = "Delimiter",
-        history = "Number",
-        named = "Todo",
-    },
-}
+        sign_highlights = {
+            cursorline = "Visual",
+            selection = "Constant",
+            default = "Function",
+            unnamed = "Statement",
+            read_only = "Type",
+            expression = "Exception",
+            black_hole = "Error",
+            alternate_buffer = "Operator",
+            last_search = "Tag",
+            delete = "Special",
+            yank = "Delimiter",
+            history = "Number",
+            named = "Todo",
+        },
 ```
-
 <!-- MARKDOWN-AUTO-DOCS:END -->
