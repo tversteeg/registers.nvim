@@ -1,5 +1,18 @@
 ---@meta
 
+---@class registers
+---@field options options
+---@field private _mode string
+---@field private _previous_mode string
+---@field private _namespace string
+---@field private _operator_count integer
+---@field private _window integer?
+---@field private _buffer integer?
+---@field private _register_values { regcontents: string, line: string, register: string }[]
+---@field private _empty_registers string[]
+---@field private _mappings table<string, function>
+local registers = {}
+
 ---@mod intro Introduction
 ---@brief [[
 ---Registers.nvim is a minimal but very configurable Neovim plugin.
@@ -31,11 +44,18 @@
 ---@field window window_options Floating window
 ---@field sign_highlights sign_highlights_options Highlights for the sign section of the window
 
+---@alias register_mode
+---| "insert" # Insert the register's contents like when in insert mode and pressing <C-R>.
+---| "paste" # Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode.
+---| "motion" # Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
+
 ---@class bind_keys_options `require("registers").setup({ bind_keys = {...} })`
 ---@field normal boolean Map " in normal mode to display the registers window. Default is `true`.
 ---@field insert boolean Map <C-R> in insert mode to display the registers window. Default is `true`.
 ---@field visual boolean Map " in visual mode to display the registers window. Default is `true`.
----@field registers boolean Map all register keys in the registers window. Default is `true`.
+---@field register_key fun(register:string?,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
+---@field return_key fun(register:string?,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register`.
+---@field escape_key fun(register:string?,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window`.
 ---@field ctrl_n boolean Map <C-N> to move down in the registers window. Default is `true`.
 ---@field ctrl_p boolean Map <C-P> to move up in the registers window. Default is `true`.
 ---@field ctrl_j boolean Map <C-J> to move down in the registers window. Default is `true`.
@@ -75,71 +95,62 @@
 ---@field history string? Highlight group for the history registers, `1-9`. Default is `"Number"`.
 ---@field named string? Highlight group for the named registers, `a-z`. Default is `"Todo"`.
 
----@type options default values for all options
-local DEFAULT_OPTIONS =
-{
-    show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
-    show_empty = true,
-    register_user_command = true,
-    system_clipboard = true,
-    trim_whitespace = true,
-    paste_in_normal_mode = false,
-    delay = 0,
+---Get the default values for all options.
+---@return options default values for all options
+function registers.default_options()
+    return {
+        show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
+        show_empty = true,
+        register_user_command = true,
+        system_clipboard = true,
+        trim_whitespace = true,
+        paste_in_normal_mode = false,
+        delay = 0,
 
-    bind_keys = {
-        normal = true,
-        insert = true,
-        visual = true,
-        registers = true,
-        ctrl_n = true,
-        ctrl_p = true,
-        ctrl_j = true,
-        ctrl_k = true,
-    },
+        bind_keys = {
+            normal = true,
+            insert = true,
+            visual = true,
+            register_key = registers.apply_register,
+            return_key = registers.apply_register,
+            escape_key = registers.close_window,
+            ctrl_n = true,
+            ctrl_p = true,
+            ctrl_j = true,
+            ctrl_k = true,
+        },
 
-    symbols = {
-        newline = "⏎",
-        space = " ",
-        tab = "·",
-    },
+        symbols = {
+            newline = "⏎",
+            space = " ",
+            tab = "·",
+        },
 
-    window = {
-        max_width = 100,
-        highlight_cursorline = true,
-        border = "none",
-    },
+        window = {
+            max_width = 100,
+            highlight_cursorline = true,
+            border = "none",
+        },
 
-    sign_highlights = {
-        cursorline = "Visual",
-        selection = "Constant",
-        default = "Function",
-        unnamed = "Statement",
-        read_only = "Type",
-        expression = "Exception",
-        black_hole = "Error",
-        alternate_buffer = "Operator",
-        last_search = "Tag",
-        delete = "Special",
-        yank = "Delimiter",
-        history = "Number",
-        named = "Todo",
-    },
-}
+        sign_highlights = {
+            cursorline = "Visual",
+            selection = "Constant",
+            default = "Function",
+            unnamed = "Statement",
+            read_only = "Type",
+            expression = "Exception",
+            black_hole = "Error",
+            alternate_buffer = "Operator",
+            last_search = "Tag",
+            delete = "Special",
+            yank = "Delimiter",
+            history = "Number",
+            named = "Todo",
+        },
+    }
+end
 
 ---@mod functions Functions
-
----@class registers
----@field options options
----@field private _mode string
----@field private _previous_mode string
----@field private _namespace string
----@field private _operator_count integer
----@field private _window integer?
----@field private _buffer integer?
----@field private _register_values { regcontents: string, line: string, register: string }[]
----@field private _empty_registers string[]
----@field private _mappings table<string, function>
-local registers = {}
 
 ---Let the user configure this plugin.
 ---
@@ -154,11 +165,11 @@ function registers.setup(options)
     end
 
     -- Create the options object with default values
-    registers.options = vim.tbl_deep_extend("keep", options or {}, DEFAULT_OPTIONS)
+    registers.options = vim.tbl_deep_extend("keep", options or {}, registers.default_options())
 
     -- Create the user command to manually open the window with :Registers
     if registers.options.register_user_command then
-        vim.api.nvim_create_user_command("Registers", registers.show, {})
+        vim.api.nvim_create_user_command("Registers", registers.show_window, {})
     end
 
     -- Create a namespace for the highlights and signs
@@ -171,7 +182,7 @@ function registers.setup(options)
     if registers._key_should_be_bound("normal") then
         vim.api.nvim_set_keymap("n", "\"", "", {
             callback = function()
-                return registers.show("motion")
+                return registers.show_window("motion")
             end,
             expr = true
         })
@@ -179,7 +190,7 @@ function registers.setup(options)
     if registers._key_should_be_bound("insert") then
         vim.api.nvim_set_keymap("i", "<C-R>", "", {
             callback = function()
-                return registers.show("insert")
+                return registers.show_window("insert")
             end,
             expr = true
         })
@@ -187,17 +198,12 @@ function registers.setup(options)
     if registers._key_should_be_bound("visual") then
         vim.api.nvim_set_keymap("v", "\"", "", {
             callback = function()
-                return registers.show("paste")
+                return registers.show_window("paste")
             end,
             expr = true
         })
     end
 end
-
----@alias register_mode
----| "insert" # Insert the register's contents like when in insert mode and pressing <C-R>.
----| "paste" # Insert the register's contents by pretending a pasting action, similar to pressing "*reg*p, cannot be used in insert mode.
----| "motion" # Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 ---Popup the registers window.
 ---@param mode register_mode? How the registers window should handle the selection of registers.
@@ -215,7 +221,7 @@ end
 ---    expr = true
 ---})
 ---@usage ]]
-function registers.show(mode)
+function registers.show_window(mode)
     -- Check whether a key is pressed in between waiting for the window to open
     local interrupted = vim.wait(registers.options.delay * 1000, function()
         return vim.fn.getchar(true) ~= 0
@@ -232,7 +238,7 @@ function registers.show(mode)
 end
 
 ---Close the window.
-function registers.close()
+function registers.close_window()
     if not registers._window then
         -- There's nothing to close
         return
@@ -240,6 +246,36 @@ function registers.close()
 
     vim.api.nvim_win_close(registers._window, true)
     registers._window = nil
+end
+
+---Apply the specified register.
+---@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
+---@param mode register_mode? How the register should be applied.
+function registers.apply_register(register, mode)
+    -- When the current line needs to be selected a window also needs to be open
+    if register == nil and registers._window == nil then
+        vim.api.nvim_err_writeln("registers window isn't open, can't apply register")
+        return
+    end
+
+    -- Overwrite the mode
+    if mode then
+        registers._mode = mode
+    end
+
+    registers._apply_register(register)
+end
+
+---Paste the specified register.
+---@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
+function registers.paste_register(register)
+    registers.apply_register(register, "paste")
+end
+
+---Create a motion from the specified register.
+---@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
+function registers.motion_register(register)
+    registers.apply_register(register, "motion")
 end
 
 ---Create the window and the buffer.
@@ -253,9 +289,9 @@ function registers._create_window(mode)
 
     -- Handle illegal mode combinations
     if registers._mode == "paste" and registers._previous_mode == "i" then
-        vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show('paste')` being invoked from insert mode")
+        vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('paste')` being invoked from insert mode")
     elseif registers._mode == "insert" and registers._previous_mode ~= "i" then
-        vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show('insert')` being invoked from any mode other than insert mode")
+        vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('insert')` being invoked from any mode other than insert mode")
         return
     end
 
@@ -315,7 +351,7 @@ function registers._create_window(mode)
     vim.api.nvim_create_autocmd("BufLeave", {
         group = vim.api.nvim_create_augroup("RegistersWindow", {}),
         pattern = "<buffer>",
-        callback = registers.close,
+        callback = registers.close_window,
     })
 
     -- Make the buffer content cut-off instead of starting on new line
@@ -427,20 +463,22 @@ function registers._fill_mappings()
     -- Create the mappings
     registers._mappings = {
         -- Return will apply the current highlighted register
-        ["<CR>"] = registers._apply_register,
+        ["<CR>"] = function() registers.options.bind_keys.return_key(nil, registers._mode) end,
         -- Escape will close the window
-        ["<ESC>"] = registers.close,
+        ["<ESC>"] = function() registers.options.bind_keys.escape_key(nil, registers._mode) end,
     }
 
     -- Create mappings for the register keys if applicable
     if registers._key_should_be_bound("registers") then
         for _, register in ipairs(registers._all_registers) do
+            local register_func = function() registers.options.bind_keys.register_key(register, registers._mode) end
+
             -- Pressing the character of a register will also apply it
-            registers._mappings[register] = function() registers._apply_register(register) end
+            registers._mappings[register] = register_func
 
             -- Also map uppercase registers if applicable
             if register:upper() ~= register then
-                registers._mappings[register:upper()] = function() registers._apply_register(register) end
+                registers._mappings[register:upper()] = register_func
             end
         end
     end
@@ -496,7 +534,7 @@ function registers._apply_register(register)
     end
 
     -- Close the window
-    registers.close()
+    registers.close_window()
 
     -- Handle the different modes
     if registers._mode == "insert" then

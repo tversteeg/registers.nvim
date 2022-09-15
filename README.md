@@ -28,7 +28,7 @@ Empty registers are not shown by default.
 
 Use the <kbd>Up</kbd> and <kbd>Down</kbd> or <kbd>Ctrl</kbd><kbd>P</kbd> and <kbd>Ctrl</kbd><kbd>N</kbd> or <kbd>Ctrl</kbd><kbd>J</kbd> and <kbd>Ctrl</kbd><kbd>K</kbd> keys to select the register you want to use and press <kbd>Enter</kbd> to apply it, or type the register you want to apply, which is one of the following:
 
-<kbd>"</kbd> <kbd>0</kbd>-<kbd>9</kbd> <kbd>a</kbd>-<kbd>z</kbd> <kbd>:</kbd> <kbd>.</kbd> <kbd>%</kbd> <kbd>#</kbd> <kbd>=</kbd> <kbd>*</kbd> <kbd>+</kbd> <kbd>_</kbd> <kbd>/</kbd>
+<kbd>"</kbd> <kbd>0</kbd>-<kbd>9</kbd> <kbd>a</kbd>-<kbd>z</kbd> <kbd>:</kbd> <kbd>.</kbd> <kbd>%</kbd> <kbd>#</kbd> <kbd>=</kbd> <kbd>\*</kbd> <kbd>+</kbd> <kbd>\_</kbd> <kbd>/</kbd>
 
 ## Install
 
@@ -50,8 +50,9 @@ Configuration options can be found in Neovim's documentation after installing wi
 
 ### Default values
 
-<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=80-127) -->
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=102-149) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
+
 ```lua
 {
     show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
@@ -102,4 +103,5 @@ Configuration options can be found in Neovim's documentation after installing wi
     },
 }
 ```
+
 <!-- MARKDOWN-AUTO-DOCS:END -->

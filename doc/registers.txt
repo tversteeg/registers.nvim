@@ -1,3 +1,10 @@
+registers                                                            *registers*
+
+
+    Fields: ~
+        {options}  (options)
+
+
 ================================================================================
 Introduction                                                             *intro*
 
@@ -39,14 +46,16 @@ bind_keys_options                                            *bind_keys_options*
     `require("registers").setup({ bind_keys = {...} })`
 
     Fields: ~
-        {normal}     (boolean)  Map " in normal mode to display the registers window. Default is `true`.
-        {insert}     (boolean)  Map <C-R> in insert mode to display the registers window. Default is `true`.
-        {visual}     (boolean)  Map " in visual mode to display the registers window. Default is `true`.
-        {registers}  (boolean)  Map all register keys in the registers window. Default is `true`.
-        {ctrl_n}     (boolean)  Map <C-N> to move down in the registers window. Default is `true`.
-        {ctrl_p}     (boolean)  Map <C-P> to move up in the registers window. Default is `true`.
-        {ctrl_j}     (boolean)  Map <C-J> to move down in the registers window. Default is `true`.
-        {ctrl_k}     (boolean)  Map <C-K> to move up in the registers window. Default is `true`.
+        {normal}        (boolean)                                   Map " in normal mode to display the registers window. Default is `true`.
+        {insert}        (boolean)                                   Map <C-R> in insert mode to display the registers window. Default is `true`.
+        {visual}        (boolean)                                   Map " in visual mode to display the registers window. Default is `true`.
+        {register_key}  (fun(register:string?,mode:register_mode))  Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
+        {return_key}    (fun(register:string?,mode:register_mode))  Function to map to <CR> in the window. Default is `registers.apply_register`.
+        {escape_key}    (fun(register:string?,mode:register_mode))  Function to map to <ESC> in the window. Default is `registers.close_window`.
+        {ctrl_n}        (boolean)                                   Map <C-N> to move down in the registers window. Default is `true`.
+        {ctrl_p}        (boolean)                                   Map <C-P> to move up in the registers window. Default is `true`.
+        {ctrl_j}        (boolean)                                   Map <C-J> to move down in the registers window. Default is `true`.
+        {ctrl_k}        (boolean)                                   Map <C-K> to move up in the registers window. Default is `true`.
 
 
 window_border                                                    *window_border*
@@ -99,15 +108,15 @@ sign_highlights_options                                *sign_highlights_options*
         {named}             (string?)  Highlight group for the named registers, `a-z`. Default is `"Todo"`.
 
 
+registers.default_options()                          *registers.default_options*
+    Get the default values for all options.
+
+    Returns: ~
+        {options}  values for all options
+
+
 ================================================================================
 Functions                                                            *functions*
-
-registers                                                            *registers*
-
-
-    Fields: ~
-        {options}  (options)
-
 
 registers.setup({options})                                     *registers.setup*
     Let the user configure this plugin.
@@ -132,7 +141,7 @@ register_mode                                                    *register_mode*
         ("motion")  Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 
-registers.show({mode})                                          *registers.show*
+registers.show_window({mode})                            *registers.show_window*
     Popup the registers window.
 
     Parameters: ~
@@ -155,8 +164,31 @@ registers.show({mode})                                          *registers.show*
         <
 
 
-registers.close()                                              *registers.close*
+registers.close_window()                                *registers.close_window*
     Close the window.
+
+
+                                                      *registers.apply_register*
+registers.apply_register({register}, {mode})
+    Apply the specified register.
+
+    Parameters: ~
+        {register}  (string?)         Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
+        {mode}      (register_mode?)  How the register should be applied.
+
+
+registers.paste_register({register})                  *registers.paste_register*
+    Paste the specified register.
+
+    Parameters: ~
+        {register}  (string?)  Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
+
+
+registers.motion_register({register})                *registers.motion_register*
+    Create a motion from the specified register.
+
+    Parameters: ~
+        {register}  (string?)  Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
