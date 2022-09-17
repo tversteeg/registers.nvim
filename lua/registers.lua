@@ -74,6 +74,7 @@ local registers = {}
 ---@field max_width number? Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
 ---@field highlight_cursorline boolean? Whether to create key mappings for the register values inside the window. Default is `true`.
 ---@field border window_border? Border style of the window. Default is `"none"`.
+---@field transparency integer? Transparency of the window, value can be between 0-100, 0 disables it. Default is `20`.
 
 ---@class symbols_options `require("registers").setup({ symbols = {...} })`
 ---@field newline string? Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
@@ -130,6 +131,7 @@ function registers.default_options()
             max_width = 100,
             highlight_cursorline = true,
             border = "none",
+            transparency = 20,
         },
 
         sign_highlights = {
@@ -370,6 +372,11 @@ function registers._create_window()
     -- Highlight the cursor line
     if registers.options.window.highlight_cursorline then
         vim.api.nvim_win_set_option(registers._window, "cursorline", true)
+    end
+
+    -- Make the window transparent
+    if registers.options.window.transparency then
+        vim.api.nvim_win_set_option(registers._window, "winblend", registers.options.window.transparency)
     end
 
     -- Add the colors
