@@ -49,16 +49,16 @@ local registers = {}
 ---| "motion" # Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 ---@class bind_keys_options `require("registers").setup({ bind_keys = {...} })`
----@field normal register_mode|false Map " in normal mode to display the registers window, `false` to disable the binding. Default is `"motion"`.
----@field visual register_mode|false Map " in visual mode to display the registers window, `false` to disable the binding. Default is `"motion"`.
----@field insert boolean Map <C-R> in insert mode to display the registers window. Default is `true`.
----@field register_key fun(register:string?,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
+---@field normal fun()|false Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_motion_window`.
+---@field visual fun()|false Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_motion_window`.
+---@field insert fun()|false Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_insert_window`.
+---@field registers fun(register:string?,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
 ---@field return_key fun(register:string?,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register`.
----@field escape_key fun(register:string?,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window`.
----@field ctrl_n boolean Map <C-N> to move down in the registers window. Default is `true`.
----@field ctrl_p boolean Map <C-P> to move up in the registers window. Default is `true`.
----@field ctrl_j boolean Map <C-J> to move down in the registers window. Default is `true`.
----@field ctrl_k boolean Map <C-K> to move up in the registers window. Default is `true`.
+---@field escape fun(register:string?,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window`.
+---@field ctrl_n fun()|false Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down`.
+---@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up`.
+---@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down`.
+---@field ctrl_k fun()|false Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up`.
 
 ---@alias window_border
 ---| "none"
@@ -107,16 +107,16 @@ function registers.default_options()
         delay = 0,
 
         bind_keys = {
-            normal = "motion",
-            visual = "motion",
-            insert = true,
-            register_key = registers.apply_register,
+            normal = registers.show_motion_window,
+            visual = registers.show_motion_window,
+            insert = registers.show_insert_window,
+            registers = registers.apply_register,
             return_key = registers.apply_register,
-            escape_key = registers.close_window,
-            ctrl_n = true,
-            ctrl_p = true,
-            ctrl_j = true,
-            ctrl_k = true,
+            escape = registers.close_window,
+            ctrl_n = registers.move_cursor_down,
+            ctrl_p = registers.move_cursor_up,
+            ctrl_j = registers.move_cursor_down,
+            ctrl_k = registers.move_cursor_up,
         },
 
         symbols = {
@@ -181,25 +181,19 @@ function registers.setup(options)
     -- Bind the keys if applicable
     if registers._key_should_be_bound("normal") then
         vim.api.nvim_set_keymap("n", "\"", "", {
-            callback = function()
-                return registers.show_window(registers.options.bind_keys.normal--[[@as register_mode]] )
-            end,
+            callback = registers.options.bind_keys.normal,
             expr = true
         })
     end
     if registers._key_should_be_bound("visual") then
         vim.api.nvim_set_keymap("v", "\"", "", {
-            callback = function()
-                return registers.show_window(registers.options.bind_keys.visual--[[@as register_mode]] )
-            end,
+            callback = registers.options.bind_keys.visual,
             expr = true
         })
     end
     if registers._key_should_be_bound("insert") then
         vim.api.nvim_set_keymap("i", "<C-R>", "", {
-            callback = function()
-                return registers.show_window("insert")
-            end,
+            callback = registers.options.bind_keys.insert,
             expr = true
         })
     end
@@ -249,6 +243,21 @@ function registers.show_window(mode)
             return vim.api.nvim_replace_termcodes("<C-R>", true, true, true)
         end
     end
+end
+
+---Popup the registers window which will create a motion from the selected register.
+function registers.show_motion_window()
+    return registers.show_window("motion")
+end
+
+---Popup the registers window which will create a paste from the selected register.
+function registers.show_paste_window()
+    return registers.show_window("paste")
+end
+
+---Popup the registers window which will create a insert from the selected register.
+function registers.show_insert_window()
+    return registers.show_window("insert")
 end
 
 ---Close the window.
@@ -392,6 +401,26 @@ function registers._create_window()
     end
 end
 
+---Move the cursor up in the window.
+function registers.move_cursor_up()
+    if registers._window == nil then
+        vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
+        return
+    end
+
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Up>", true, true, true), "n", true)
+end
+
+---Move the cursor down in the window.
+function registers.move_cursor_down()
+    if registers._window == nil then
+        vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
+        return
+    end
+
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Down>", true, true, true), "n", true)
+end
+
 ---Fill the arrays with the register values.
 ---@private
 function registers._read_registers()
@@ -477,18 +506,16 @@ end
 ---Pre-fill the key mappings.
 ---@private
 function registers._fill_mappings()
-    -- Create the mappings
+    -- Create the mappings to call the function specified in the options
     registers._mappings = {
-        -- Return will apply the current highlighted register
         ["<CR>"] = function() registers.options.bind_keys.return_key(nil, registers._mode) end,
-        -- Escape will close the window
-        ["<ESC>"] = function() registers.options.bind_keys.escape_key(nil, registers._mode) end,
+        ["<ESC>"] = function() registers.options.bind_keys.escape(nil, registers._mode) end,
     }
 
     -- Create mappings for the register keys if applicable
     if registers.options.bind_keys then
         for _, register in ipairs(registers._all_registers) do
-            local register_func = function() registers.options.bind_keys.register_key(register, registers._mode) end
+            local register_func = function() registers.options.bind_keys.registers(register, registers._mode) end
 
             -- Pressing the character of a register will also apply it
             registers._mappings[register] = register_func
@@ -505,7 +532,7 @@ end
 ---@private
 function registers._set_bindings()
     -- Helper function for setting the keymap for all buffer modes
-    local set_keymap_all_modes = function(key, rhs, callback)
+    local set_keymap_all_modes = function(key, callback)
         local map_options = {
             nowait = true,
             noremap = true,
@@ -513,29 +540,31 @@ function registers._set_bindings()
             callback = callback
         }
 
-        vim.api.nvim_buf_set_keymap(registers._buffer, "n", key, rhs, map_options)
-        vim.api.nvim_buf_set_keymap(registers._buffer, "i", key, rhs, map_options)
-        vim.api.nvim_buf_set_keymap(registers._buffer, "v", key, rhs, map_options)
-        vim.api.nvim_buf_set_keymap(registers._buffer, "c", key, rhs, map_options)
+        vim.api.nvim_buf_set_keymap(registers._buffer, "n", key, '', map_options)
+        vim.api.nvim_buf_set_keymap(registers._buffer, "i", key, '', map_options)
+        vim.api.nvim_buf_set_keymap(registers._buffer, "v", key, '', map_options)
+        vim.api.nvim_buf_set_keymap(registers._buffer, "c", key, '', map_options)
     end
 
     -- Map all keys
-    for key, callback in pairs(registers._mappings) do
-        set_keymap_all_modes(key, '', callback)
+    if registers._key_should_be_bound("registers") then
+        for key, callback in pairs(registers._mappings) do
+            set_keymap_all_modes(key, callback)
+        end
     end
 
     -- Map the keys for moving up and down
     if registers._key_should_be_bound("ctrl_k") then
-        set_keymap_all_modes("<c-k>", "<up>")
+        set_keymap_all_modes("<c-k>", registers.options.bind_keys.ctrl_k)
     end
     if registers._key_should_be_bound("ctrl_j") then
-        set_keymap_all_modes("<c-j>", "<down>")
+        set_keymap_all_modes("<c-j>", registers.options.bind_keys.ctrl_j)
     end
     if registers._key_should_be_bound("ctrl_p") then
-        set_keymap_all_modes("<c-p>", "<up>")
+        set_keymap_all_modes("<c-p>", registers.options.bind_keys.ctrl_p)
     end
     if registers._key_should_be_bound("ctrl_n") then
-        set_keymap_all_modes("<c-n>", "<down>")
+        set_keymap_all_modes("<c-n>", registers.options.bind_keys.ctrl_n)
     end
 end
 

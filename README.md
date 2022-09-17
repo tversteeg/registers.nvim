@@ -61,16 +61,16 @@ Configuration options can be found in Neovim's documentation after installing wi
         delay = 0,
 
         bind_keys = {
-            normal = "motion",
-            visual = "motion",
-            insert = true,
-            register_key = registers.apply_register,
+            normal = registers.show_motion_window,
+            visual = registers.show_motion_window,
+            insert = registers.show_insert_window,
+            registers = registers.apply_register,
             return_key = registers.apply_register,
-            escape_key = registers.close_window,
-            ctrl_n = true,
-            ctrl_p = true,
-            ctrl_j = true,
-            ctrl_k = true,
+            escape = registers.close_window,
+            ctrl_n = registers.move_cursor_down,
+            ctrl_p = registers.move_cursor_up,
+            ctrl_j = registers.move_cursor_down,
+            ctrl_k = registers.move_cursor_up,
         },
 
         symbols = {
