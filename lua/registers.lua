@@ -8,7 +8,7 @@
 ---@field private _operator_count integer
 ---@field private _window integer?
 ---@field private _buffer integer?
----@field private _register_values { regcontents: string, line: string, register: string }[]
+---@field private _register_values { regcontents: string, line: string, register: string, type_symbol?: string, regtype: string }[]
 ---@field private _empty_registers string[]
 ---@field private _mappings table<string, function>
 local registers = {}
@@ -39,6 +39,7 @@ local registers = {}
 ---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
 ---@field trim_whitespace boolean Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
 ---@field hide_only_whitespace boolean Treat registers with only whitespace as empty registers. Default is `true`.
+---@field show_register_types boolean Show how the register will be applied in the sign bar, the characters can be customized in the `symbols` table. Default is `true`.
 ---@field bind_keys bind_keys_options|boolean Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
 ---@field symbols symbols_options Symbols used to replace text in the previous buffer.
 ---@field window window_options Floating window
@@ -80,6 +81,9 @@ local registers = {}
 ---@field newline string? Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
 ---@field space string? Symbol to show for a space character. Default is `" "`.
 ---@field tab string? Symbol to show for a tab character. Default is `"·"`.
+---@field register_type_charwise string? Symbol to show next to the sign to signify that the register will be applied in a character by character way. Default is `"ᶜ"`.
+---@field register_type_linewise string? Symbol to show next to the sign to signify that the register will be applied in a line by line way. Default is `"ˡ"`.
+---@field register_type_blockwise string? Symbol to show next to the sign to signify that the register will be applied as a horizontal block, ignoring line endings. Default is `"ᵇ"`.
 
 ---@class sign_highlights_options `require("registers").setup({ sign_highlights = {...} })`
 ---@field cursorline string? Highlight group for when the cursor is over the line. Default is `"Visual"`.
@@ -106,6 +110,7 @@ function registers.default_options()
         system_clipboard = true,
         trim_whitespace = true,
         hide_only_whitespace = true,
+        show_register_types = true,
         delay = 0,
 
         bind_keys = {
@@ -125,6 +130,9 @@ function registers.default_options()
             newline = "⏎",
             space = " ",
             tab = "·",
+            register_type_charwise = "ᶜ",
+            register_type_linewise = "ˡ",
+            register_type_blockwise = "ᵇ",
         },
 
         window = {
@@ -386,7 +394,9 @@ function registers._create_window()
     vim.api.nvim_win_set_option(registers._window, "wrap", false)
 
     -- Show a column on the left for the register names
-    vim.api.nvim_win_set_option(registers._window, "signcolumn", "yes")
+    vim.api.nvim_win_set_option(registers._window, "signcolumn",
+        -- Add space for the extra symbol in the sign column depending on whether we should show the register types
+        registers.options.show_register_types and "yes:2" or "yes")
 
     -- Highlight the cursor line
     if registers.options.window.highlight_cursorline then
@@ -459,12 +469,12 @@ function registers._read_registers()
             -- Check whether the register should be hidden due to being empty
             if line and registers.options.hide_only_whitespace then
                 hide = #(line:match("^%s*(.-)%s*$")) == 0
-
-                -- Place it in the empty registers
-                registers._empty_registers[#registers._empty_registers + 1] = register
             end
 
-            if not hide and line and type(line) == "string" then
+            if hide then
+                -- Place it in the empty registers
+                registers._empty_registers[#registers._empty_registers + 1] = register
+            elseif line and type(line) == "string" then
                 -- Trim the whitespace if applicable
                 if registers.options.trim_whitespace then
                     line = line:match("^%s*(.-)%s*$")
@@ -478,6 +488,17 @@ function registers._read_registers()
                     :gsub(" ", registers.options.symbols.space)
 
                 register_info.line = line
+
+                -- Convert the sign types
+                if registers.options.show_register_types then
+                    if register_info.regtype == 'v' then
+                        register_info.type_symbol = registers.options.symbols.register_type_charwise
+                    elseif register_info.regtype == 'V' then
+                        register_info.type_symbol = registers.options.symbols.register_type_linewise
+                    else
+                        register_info.type_symbol = registers.options.symbols.register_type_blockwise
+                    end
+                end
 
                 registers._register_values[#registers._register_values + 1] = register_info
             end
@@ -514,10 +535,16 @@ function registers._fill_window()
     for i = 1, #registers._register_values do
         local register = registers._register_values[i]
 
+        local sign_text = register.register
+        -- Add the register type symbol if applicable
+        if registers.options.show_register_types then
+            sign_text = sign_text .. register.type_symbol
+        end
+
         -- Create signs for the register itself, and highlight the line
         vim.api.nvim_buf_set_extmark(registers._buffer, registers._namespace, i - 1, 0, {
             id = i,
-            sign_text = register.register,
+            sign_text = sign_text,
             sign_hl_group = registers._highlight_for_sign(register.register),
             cursorline_hl_group = registers.options.sign_highlights.cursorline,
         })

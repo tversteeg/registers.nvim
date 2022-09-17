@@ -36,6 +36,7 @@ options                                                                *options*
         {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard. Default is `true`.
         {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
         {hide_only_whitespace}   (boolean)                    Treat registers with only whitespace as empty registers. Default is `true`.
+        {show_register_types}    (boolean)                    Show how the register will be applied in the sign bar, the characters can be customized in the `symbols` table. Default is `true`.
         {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
         {symbols}                (symbols_options)            Symbols used to replace text in the previous buffer.
         {window}                 (window_options)             Floating window
@@ -94,9 +95,12 @@ symbols_options                                                *symbols_options*
     `require("registers").setup({ symbols = {...} })`
 
     Fields: ~
-        {newline}  (string?)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
-        {space}    (string?)  Symbol to show for a space character. Default is `" "`.
-        {tab}      (string?)  Symbol to show for a tab character. Default is `"·"`.
+        {newline}                  (string?)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
+        {space}                    (string?)  Symbol to show for a space character. Default is `" "`.
+        {tab}                      (string?)  Symbol to show for a tab character. Default is `"·"`.
+        {register_type_charwise}   (string?)  Symbol to show next to the sign to signify that the register will be applied in a character by character way. Default is `"ᶜ"`.
+        {register_type_linewise}   (string?)  Symbol to show next to the sign to signify that the register will be applied in a line by line way. Default is `"ˡ"`.
+        {register_type_blockwise}  (string?)  Symbol to show next to the sign to signify that the register will be applied as a horizontal block, ignoring line endings. Default is `"ᵇ"`.
 
 
 sign_highlights_options                                *sign_highlights_options*
