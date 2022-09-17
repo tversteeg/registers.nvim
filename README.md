@@ -50,7 +50,7 @@ Configuration options can be found in Neovim's documentation after installing wi
 
 ### Default values
 
-<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=102-149) -->
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=103-151) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 ```lua
         show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
@@ -58,6 +58,7 @@ Configuration options can be found in Neovim's documentation after installing wi
         register_user_command = true,
         system_clipboard = true,
         trim_whitespace = true,
+        hide_only_whitespace = true,
         delay = 0,
 
         bind_keys = {

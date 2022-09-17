@@ -38,6 +38,7 @@ local registers = {}
 ---@field register_user_command boolean Whether to register the `:Registers` user command. Default is `true`.
 ---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
 ---@field trim_whitespace boolean Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
+---@field hide_only_whitespace boolean Treat registers with only whitespace as empty registers. Default is `true`.
 ---@field bind_keys bind_keys_options|boolean Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
 ---@field symbols symbols_options Symbols used to replace text in the previous buffer.
 ---@field window window_options Floating window
@@ -104,6 +105,7 @@ function registers.default_options()
         register_user_command = true,
         system_clipboard = true,
         trim_whitespace = true,
+        hide_only_whitespace = true,
         delay = 0,
 
         bind_keys = {
@@ -246,16 +248,22 @@ function registers.show_window(mode)
 end
 
 ---Popup the registers window which will create a motion from the selected register.
+---
+---Simple wrapper around `registers.show_window("motion")` so it can be easily used in configurations.
 function registers.show_motion_window()
     return registers.show_window("motion")
 end
 
 ---Popup the registers window which will create a paste from the selected register.
+---
+---Simple wrapper around `registers.show_window("paste")` so it can be easily used in configurations.
 function registers.show_paste_window()
     return registers.show_window("paste")
 end
 
 ---Popup the registers window which will create a insert from the selected register.
+---
+---Simple wrapper around `registers.show_window("insert")` so it can be easily used in configurations.
 function registers.show_insert_window()
     return registers.show_window("insert")
 end
@@ -290,12 +298,16 @@ function registers.apply_register(register, mode)
 end
 
 ---Paste the specified register.
+---
+---Simple wrapper around `registers.apply_register(.., "paste")` so it can be easily used in configurations.
 ---@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
 function registers.paste_register(register)
     registers.apply_register(register, "paste")
 end
 
 ---Create a motion from the specified register.
+---
+---Simple wrapper around `registers.apply_register(.., "motion")` so it can be easily used in configurations.
 ---@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
 function registers.motion_register(register)
     registers.apply_register(register, "motion")
@@ -443,7 +455,16 @@ function registers._read_registers()
 
             -- The register contents as a single line
             local line = table.concat(register_info.regcontents, registers.options.symbols.newline)
-            if line and type(line) == "string" then
+            local hide = false
+            -- Check whether the register should be hidden due to being empty
+            if line and registers.options.hide_only_whitespace then
+                hide = #(line:match("^%s*(.-)%s*$")) == 0
+
+                -- Place it in the empty registers
+                registers._empty_registers[#registers._empty_registers + 1] = register
+            end
+
+            if not hide and line and type(line) == "string" then
                 -- Trim the whitespace if applicable
                 if registers.options.trim_whitespace then
                     line = line:match("^%s*(.-)%s*$")
@@ -543,7 +564,6 @@ function registers._set_bindings()
         vim.api.nvim_buf_set_keymap(registers._buffer, "n", key, '', map_options)
         vim.api.nvim_buf_set_keymap(registers._buffer, "i", key, '', map_options)
         vim.api.nvim_buf_set_keymap(registers._buffer, "v", key, '', map_options)
-        vim.api.nvim_buf_set_keymap(registers._buffer, "c", key, '', map_options)
     end
 
     -- Map all keys

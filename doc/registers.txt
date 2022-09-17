@@ -35,6 +35,7 @@ options                                                                *options*
         {register_user_command}  (boolean)                    Whether to register the `:Registers` user command. Default is `true`.
         {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard. Default is `true`.
         {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
+        {hide_only_whitespace}   (boolean)                    Treat registers with only whitespace as empty registers. Default is `true`.
         {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
         {symbols}                (symbols_options)            Symbols used to replace text in the previous buffer.
         {window}                 (window_options)             Floating window
@@ -167,13 +168,19 @@ registers.show_window({mode})                            *registers.show_window*
 registers.show_motion_window()                    *registers.show_motion_window*
     Popup the registers window which will create a motion from the selected register.
 
+    Simple wrapper around `registers.show_window("motion")` so it can be easily used in configurations.
+
 
 registers.show_paste_window()                      *registers.show_paste_window*
     Popup the registers window which will create a paste from the selected register.
 
+    Simple wrapper around `registers.show_window("paste")` so it can be easily used in configurations.
+
 
 registers.show_insert_window()                    *registers.show_insert_window*
     Popup the registers window which will create a insert from the selected register.
+
+    Simple wrapper around `registers.show_window("insert")` so it can be easily used in configurations.
 
 
 registers.close_window()                                *registers.close_window*
@@ -192,12 +199,16 @@ registers.apply_register({register}, {mode})
 registers.paste_register({register})                  *registers.paste_register*
     Paste the specified register.
 
+    Simple wrapper around `registers.apply_register(.., "paste")` so it can be easily used in configurations.
+
     Parameters: ~
         {register}  (string?)  Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
 
 
 registers.motion_register({register})                *registers.motion_register*
     Create a motion from the specified register.
+
+    Simple wrapper around `registers.apply_register(.., "motion")` so it can be easily used in configurations.
 
     Parameters: ~
         {register}  (string?)  Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
