@@ -31,7 +31,6 @@ options                                                                *options*
     Fields: ~
         {show}                   (string)                     Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
         {show_empty}             (boolean)                    Show the registers which aren't filled in a separate line. Default is `true`.
-        {paste_in_normal_mode}   (boolean)                    Instead of keeping the register selectable as per the default behavior immediately paste it. Default is `false`.
         {delay}                  (number)                     How long, in seconds, to wait before opening the window. Default is `0`.
         {register_user_command}  (boolean)                    Whether to register the `:Registers` user command. Default is `true`.
         {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard. Default is `true`.
@@ -55,9 +54,9 @@ bind_keys_options                                            *bind_keys_options*
     `require("registers").setup({ bind_keys = {...} })`
 
     Fields: ~
-        {normal}        (boolean)                                   Map " in normal mode to display the registers window. Default is `true`.
+        {normal}        (register_mode|false)                       Map " in normal mode to display the registers window, `false` to disable the binding. Default is `"motion"`.
+        {visual}        (register_mode|false)                       Map " in visual mode to display the registers window, `false` to disable the binding. Default is `"motion"`.
         {insert}        (boolean)                                   Map <C-R> in insert mode to display the registers window. Default is `true`.
-        {visual}        (boolean)                                   Map " in visual mode to display the registers window. Default is `true`.
         {register_key}  (fun(register:string?,mode:register_mode))  Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
         {return_key}    (fun(register:string?,mode:register_mode))  Function to map to <CR> in the window. Default is `registers.apply_register`.
         {escape_key}    (fun(register:string?,mode:register_mode))  Function to map to <ESC> in the window. Default is `registers.close_window`.
@@ -87,6 +86,7 @@ window_options                                                  *window_options*
         {max_width}             (number?)         Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
         {highlight_cursorline}  (boolean?)        Whether to create key mappings for the register values inside the window. Default is `true`.
         {border}                (window_border?)  Border style of the window. Default is `"none"`.
+        {transparency}          (integer?)        Transparency of the window, value can be between 0-100, 0 disables it. Default is `20`.
 
 
 symbols_options                                                *symbols_options*

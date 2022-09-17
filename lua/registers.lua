@@ -34,7 +34,6 @@ local registers = {}
 ---@class options `require("registers").setup({...})`
 ---@field show string Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
 ---@field show_empty boolean Show the registers which aren't filled in a separate line. Default is `true`.
----@field paste_in_normal_mode boolean Instead of keeping the register selectable as per the default behavior immediately paste it. Default is `false`.
 ---@field delay number How long, in seconds, to wait before opening the window. Default is `0`.
 ---@field register_user_command boolean Whether to register the `:Registers` user command. Default is `true`.
 ---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
@@ -50,9 +49,9 @@ local registers = {}
 ---| "motion" # Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 ---@class bind_keys_options `require("registers").setup({ bind_keys = {...} })`
----@field normal boolean Map " in normal mode to display the registers window. Default is `true`.
+---@field normal register_mode|false Map " in normal mode to display the registers window, `false` to disable the binding. Default is `"motion"`.
+---@field visual register_mode|false Map " in visual mode to display the registers window, `false` to disable the binding. Default is `"motion"`.
 ---@field insert boolean Map <C-R> in insert mode to display the registers window. Default is `true`.
----@field visual boolean Map " in visual mode to display the registers window. Default is `true`.
 ---@field register_key fun(register:string?,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
 ---@field return_key fun(register:string?,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register`.
 ---@field escape_key fun(register:string?,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window`.
@@ -105,13 +104,12 @@ function registers.default_options()
         register_user_command = true,
         system_clipboard = true,
         trim_whitespace = true,
-        paste_in_normal_mode = false,
         delay = 0,
 
         bind_keys = {
-            normal = true,
+            normal = "motion",
+            visual = "motion",
             insert = true,
-            visual = true,
             register_key = registers.apply_register,
             return_key = registers.apply_register,
             escape_key = registers.close_window,
@@ -184,7 +182,15 @@ function registers.setup(options)
     if registers._key_should_be_bound("normal") then
         vim.api.nvim_set_keymap("n", "\"", "", {
             callback = function()
-                return registers.show_window("motion")
+                return registers.show_window(registers.options.bind_keys.normal--[[@as register_mode]] )
+            end,
+            expr = true
+        })
+    end
+    if registers._key_should_be_bound("visual") then
+        vim.api.nvim_set_keymap("v", "\"", "", {
+            callback = function()
+                return registers.show_window(registers.options.bind_keys.visual--[[@as register_mode]] )
             end,
             expr = true
         })
@@ -193,14 +199,6 @@ function registers.setup(options)
         vim.api.nvim_set_keymap("i", "<C-R>", "", {
             callback = function()
                 return registers.show_window("insert")
-            end,
-            expr = true
-        })
-    end
-    if registers._key_should_be_bound("visual") then
-        vim.api.nvim_set_keymap("v", "\"", "", {
-            callback = function()
-                return registers.show_window("motion")
             end,
             expr = true
         })
@@ -601,8 +599,7 @@ function registers._apply_register(register)
             end
 
             -- Paste the register if applicable
-            if registers._mode == "paste"
-                or (registers._previous_mode == "n" and registers.options.paste_in_normal_mode) then
+            if registers._mode == "paste" then
                 keys = keys .. "p"
             end
 
