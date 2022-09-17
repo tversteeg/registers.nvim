@@ -200,7 +200,7 @@ function registers.setup(options)
     if registers._key_should_be_bound("visual") then
         vim.api.nvim_set_keymap("v", "\"", "", {
             callback = function()
-                return registers.show_window("paste")
+                return registers.show_window("motion")
             end,
             expr = true
         })
@@ -387,6 +387,11 @@ function registers._create_window()
 
     -- Ensure the window shows up
     vim.cmd("redraw!")
+
+    -- Put the window in normal mode when using a visual selection
+    if registers._previous_mode == 'v' or registers._previous_mode == '^V' or registers._previous_mode == 'V' then
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-\\><C-N>", true, true, true), "n", true)
+    end
 end
 
 ---Fill the arrays with the register values.
@@ -574,13 +579,14 @@ function registers._apply_register(register)
             -- Recover the "=" register with a delay otherwise it doesn't get applied
             vim.schedule(function() vim.fn.setreg("=", old_expr_content) end)
         end
-    elseif registers._previous_mode == "n" or registers._previous_mode == "v" then
+    elseif registers._previous_mode == "n"
+        or registers._previous_mode == "v" or registers._previous_mode == "V" or registers._previous_mode == "^V" then
         -- Simulate the keypresses require to perform the next actions
         vim.schedule(function()
             local keys = ""
 
             -- Go to previous visual selection if applicable
-            if registers._previous_mode == "v" then
+            if registers._previous_mode == "v" or registers._previous_mode == "V" or registers._previous_mode == "^V" then
                 keys = keys .. "gv"
             end
 
@@ -595,7 +601,8 @@ function registers._apply_register(register)
             end
 
             -- Paste the register if applicable
-            if registers._mode == "paste" or registers._previous_mode == "n" and registers.options.paste_in_normal_mode then
+            if registers._mode == "paste"
+                or (registers._previous_mode == "n" and registers.options.paste_in_normal_mode) then
                 keys = keys .. "p"
             end
 
