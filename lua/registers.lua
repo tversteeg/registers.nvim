@@ -227,13 +227,27 @@ function registers.show_window(mode)
         return vim.fn.getchar(true) ~= 0
     end, nil, false)
 
-    if interrupted then
-        -- While in a motion mode simulate the pressing of the " key
-        return "\""
-    else
+    -- Mode before opening the popup window
+    registers._previous_mode = vim.api.nvim_get_mode().mode
+
+    -- Open the window when another key hasn't been pressed in the meantime
+    if not interrupted then
+        -- Keep track of the count that's used to invoke the window so it can be applied again
+        registers._operator_count = vim.api.nvim_get_vvar("count")
+
+        -- Store the mode which defaults to paste
+        registers._mode = mode or "paste"
+
         -- The timeout was not interrupted by a key press, open a buffer
         -- Must be scheduled so the window can be created at the right moment
-        vim.schedule(function() registers._create_window(mode) end)
+        vim.schedule(function() registers._create_window() end)
+    else
+        -- While in a motion mode is shown simulate the pressing of the key depending on the mode
+        if registers._previous_mode == 'n' or registers._previous_mode == 'v' then
+            return "\""
+        else
+            return vim.api.nvim_replace_termcodes("<C-R>", true, true, true)
+        end
     end
 end
 
@@ -279,24 +293,15 @@ function registers.motion_register(register)
 end
 
 ---Create the window and the buffer.
----@param mode register_mode?
 ---@private
-function registers._create_window(mode)
-    registers._mode = mode or "paste"
-
-    -- Mode before opening the popup window
-    registers._previous_mode = vim.api.nvim_get_mode().mode
-
+function registers._create_window()
     -- Handle illegal mode combinations
     if registers._mode == "paste" and registers._previous_mode == "i" then
         vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('paste')` being invoked from insert mode")
-    elseif registers._mode == "insert" and registers._previous_mode ~= "i" then
+    elseif registers._mode == "insert" and registers._previous_mode ~= "i" and registers._previous_mode ~= "c" then
         vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('insert')` being invoked from any mode other than insert mode")
         return
     end
-
-    -- Keep track of the count that's used to invoke the window so it can be applied again
-    registers._operator_count = vim.api.nvim_get_vvar("count")
 
     -- Fill the registers
     registers._read_registers()
@@ -326,6 +331,7 @@ function registers._create_window(mode)
     -- Height is based on the amount of available registers
     local window_height = #registers._register_values
     if registers.options.show_empty then
+        -- Add an extra line for the Empty: line
         window_height = window_height + 1
     end
 
@@ -345,6 +351,7 @@ function registers._create_window(mode)
         -- How the edges are rendered
         border = registers.options.window.border,
     }
+    -- Make the window active when the window is not a preview
     registers._window = vim.api.nvim_open_win(registers._buffer, true, window_options)
 
     -- Register an autocommand to close the window if focus is lost
@@ -499,6 +506,7 @@ function registers._set_bindings()
         vim.api.nvim_buf_set_keymap(registers._buffer, "n", key, rhs, map_options)
         vim.api.nvim_buf_set_keymap(registers._buffer, "i", key, rhs, map_options)
         vim.api.nvim_buf_set_keymap(registers._buffer, "v", key, rhs, map_options)
+        vim.api.nvim_buf_set_keymap(registers._buffer, "c", key, rhs, map_options)
     end
 
     -- Map all keys
