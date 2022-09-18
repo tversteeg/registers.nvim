@@ -189,24 +189,9 @@ function registers.setup(options)
     registers._fill_mappings()
 
     -- Bind the keys if applicable
-    if registers._key_should_be_bound("normal") then
-        vim.api.nvim_set_keymap("n", "\"", "", {
-            callback = registers.options.bind_keys.normal,
-            expr = true
-        })
-    end
-    if registers._key_should_be_bound("visual") then
-        vim.api.nvim_set_keymap("v", "\"", "", {
-            callback = registers.options.bind_keys.visual,
-            expr = true
-        })
-    end
-    if registers._key_should_be_bound("insert") then
-        vim.api.nvim_set_keymap("i", "<C-R>", "", {
-            callback = registers.options.bind_keys.insert,
-            expr = true
-        })
-    end
+    registers._bind_global_key("normal", "\"", "n")
+    registers._bind_global_key("visual", "\"", "n")
+    registers._bind_global_key("insert", "<C-R>", "i")
 end
 
 ---Popup the registers window.
@@ -612,6 +597,27 @@ function registers._set_bindings()
     end
     if registers._key_should_be_bound("ctrl_n") then
         set_keymap_all_modes("<c-n>", registers.options.bind_keys.ctrl_n)
+    end
+end
+
+---Create a map for global key binding with a callback function.
+---@param index string Key of the function in the `bind_keys` table.
+---@param key string Which key to press.
+---@param mode string Which mode to register the key.
+---@private
+function registers._bind_global_key(index, key, mode)
+    if registers._key_should_be_bound(index) then
+        vim.api.nvim_set_keymap(mode, key, "", {
+            callback = function()
+                if vim.bo.filetype == "TelescopePrompt" then
+                    -- Don't open the registers window in a telescope prompt
+                    return vim.api.nvim_replace_termcodes(key, true, true, true)
+                else
+                    return registers.options.bind_keys[index]()
+                end
+            end,
+            expr = true
+        })
     end
 end
 
