@@ -190,7 +190,7 @@ function registers.setup(options)
 
     -- Bind the keys if applicable
     registers._bind_global_key("normal", "\"", "n")
-    registers._bind_global_key("visual", "\"", "n")
+    registers._bind_global_key("visual", "\"", "v")
     registers._bind_global_key("insert", "<C-R>", "i")
 end
 
@@ -609,10 +609,11 @@ function registers._bind_global_key(index, key, mode)
     if registers._key_should_be_bound(index) then
         vim.api.nvim_set_keymap(mode, key, "", {
             callback = function()
-                if vim.bo.filetype == "TelescopePrompt" then
-                    -- Don't open the registers window in a telescope prompt
+                -- Don't open the registers window in a telescope prompt or in a non-modifiable buffer
+                if not vim.bo.modifiable or vim.bo.filetype == "TelescopePrompt" then
                     return vim.api.nvim_replace_termcodes(key, true, true, true)
                 else
+                    -- Call the callback function passed to the options
                     return registers.options.bind_keys[index]()
                 end
             end,
