@@ -8,6 +8,7 @@ Requires Neovim 0.7.0+.
 
 - Non-obtrusive, won't influence you're workflow
 - Minimal interface, no visual noise
+- Configurable, there's a setting for almost all aspects of this plugin
 
 ## Use
 
