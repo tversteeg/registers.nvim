@@ -89,7 +89,7 @@ Configuration options can be found in Neovim's documentation after installing wi
             max_width = 100,
             highlight_cursorline = true,
             border = "none",
-            transparency = 20,
+            transparency = 10,
         },
 
         sign_highlights = {
