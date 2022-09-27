@@ -28,13 +28,28 @@ local registers = {}
 ---  end
 ---}
 ---<
+---
+---Keys can be bound using functions, to make it easier for use I've made all functions except `registers.setup()` return callback functions that can be configured and passed to fields in the `bind_keys` example.
+---
+---For example, to apply a delay of a second after selecting the register with it's key (for example pressing the '0' key to apply the '0' register when it's open):
+---use {
+---  "tversteeg/registers.nvim",
+---  config = function()
+---    local registers = require("registers")
+---    registers.setup({
+---      bind_keys = {
+---        registers = registers.apply_register({ delay = 1 }),
+---      },
+---    })
+---  end
+---}
+---<
 ---@brief ]]
 
 ---@mod options `registers.setup` configuration options.
 ---@class options `require("registers").setup({...})`
 ---@field show string Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
 ---@field show_empty boolean Show the registers which aren't filled in a separate line. Default is `true`.
----@field delay number How long, in seconds, to wait before opening the window. Default is `0`.
 ---@field register_user_command boolean Whether to register the `:Registers` user command. Default is `true`.
 ---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
 ---@field trim_whitespace boolean Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
@@ -51,16 +66,16 @@ local registers = {}
 ---| "motion" # Create a motion from the register, similar to pressing "*reg* (without pasting it yet).
 
 ---@class bind_keys_options `require("registers").setup({ bind_keys = {...} })`
----@field normal fun()|false Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_motion_window`.
----@field visual fun()|false Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_motion_window`.
----@field insert fun()|false Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_insert_window`.
----@field registers fun(register:string?,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
----@field return_key fun(register:string?,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register`.
----@field escape fun(register:string?,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window`.
----@field ctrl_n fun()|false Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down`.
----@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up`.
----@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down`.
----@field ctrl_k fun()|false Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up`.
+---@field normal fun()|false Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
+---@field visual fun()|false Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
+---@field insert fun()|false Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
+---@field registers fun(register:string?,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
+---@field return_key fun(register:string?,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register()`.
+---@field escape fun(register:string?,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window()`.
+---@field ctrl_n fun()|false Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down()`.
+---@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
+---@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
+---@field ctrl_k fun()|false Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
 
 ---@alias window_border
 ---| "none"
@@ -111,19 +126,18 @@ function registers.default_options()
         trim_whitespace = true,
         hide_only_whitespace = true,
         show_register_types = true,
-        delay = 0,
 
         bind_keys = {
-            normal = registers.show_motion_window,
-            visual = registers.show_motion_window,
-            insert = registers.show_insert_window,
-            registers = registers.apply_register,
-            return_key = registers.apply_register,
-            escape = registers.close_window,
-            ctrl_n = registers.move_cursor_down,
-            ctrl_p = registers.move_cursor_up,
-            ctrl_j = registers.move_cursor_down,
-            ctrl_k = registers.move_cursor_up,
+            normal = registers.show_window({ mode = "motion" }),
+            visual = registers.show_window({ mode = "motion" }),
+            insert = registers.show_window({ mode = "insert" }),
+            registers = registers.apply_register({ delay = 0.1 }),
+            return_key = registers.apply_register(),
+            escape = registers.close_window(),
+            ctrl_n = registers.move_cursor_down(),
+            ctrl_p = registers.move_cursor_up(),
+            ctrl_j = registers.move_cursor_down(),
+            ctrl_k = registers.move_cursor_up(),
         },
 
         symbols = {
@@ -194,116 +208,134 @@ function registers.setup(options)
     registers._bind_global_key("insert", "<C-R>", "i")
 end
 
+---@class callback_options `require("registers")...({...})`
+---@field delay number How long, in seconds, to wait before applying the function. Default is `0`.
+
+---@class show_window_options `require("registers").show_window({...})`
+---@field mode register_mode? How the registers window should handle the selection of registers. Default is `"motion"`.
+
 ---Popup the registers window.
----@param mode register_mode? How the registers window should handle the selection of registers.
+---@param options callback_options|show_window_options? Options for firing the callback.
+---@return function Function that can be used to pass to configuration options with callbacks.
 ---@usage [[
 ----- Disable all key bindings
 ---require("registers").setup({ bind_keys = false })
 ---
 ----- Define a custom for opening the register window when pressing "r"
 ---vim.api.nvim_set_keymap("n", "r", "", {
----    callback = function()
----        -- The "paste" argument means that when a register is selected it will automatically be pasted
----        return require("registers").show("paste")
----    end,
+---    -- The "paste" argument means that when a register is selected it will automatically be pasted
+---    callback = require("registers").show_window({ mode = "paste" }),
 ---    -- This is required for the registers window to function
 ---    expr = true
 ---})
 ---@usage ]]
-function registers.show_window(mode)
-    -- Check whether a key is pressed in between waiting for the window to open
-    local interrupted = vim.wait(registers.options.delay * 1000, function()
-        return vim.fn.getchar(true) ~= 0
-    end, nil, false)
+function registers.show_window(options)
+    options = vim.tbl_deep_extend("keep", options or {}, {
+        delay = 0,
+        mode = "motion",
+    })
 
-    -- Mode before opening the popup window
-    registers._previous_mode = vim.api.nvim_get_mode().mode
+    return function()
+        -- Check whether a key is pressed in between waiting for the window to open
+        local interrupted = vim.wait(options.delay * 1000, function()
+            return vim.fn.getchar(true) ~= 0
+        end, nil, false)
 
-    -- Open the window when another key hasn't been pressed in the meantime
-    if not interrupted then
-        -- Keep track of the count that's used to invoke the window so it can be applied again
-        registers._operator_count = vim.api.nvim_get_vvar("count")
+        -- Mode before opening the popup window
+        registers._previous_mode = vim.api.nvim_get_mode().mode
 
-        -- Store the mode which defaults to paste
-        registers._mode = mode or "paste"
+        -- Open the window when another key hasn't been pressed in the meantime
+        if not interrupted then
+            -- Keep track of the count that's used to invoke the window so it can be applied again
+            registers._operator_count = vim.api.nvim_get_vvar("count")
 
-        -- The timeout was not interrupted by a key press, open a buffer
-        -- Must be scheduled so the window can be created at the right moment
-        vim.schedule(function() registers._create_window() end)
-    else
-        -- While in a motion mode is shown simulate the pressing of the key depending on the mode
-        if registers._previous_mode == 'n' or registers._previous_mode == 'v' then
-            return "\""
+            -- Store the mode which defaults to motion
+            registers._mode = options.mode
+
+            -- The timeout was not interrupted by a key press, open a buffer
+            -- Must be scheduled so the window can be created at the right moment
+            vim.schedule(function() registers._create_window() end)
         else
-            return vim.api.nvim_replace_termcodes("<C-R>", true, true, true)
+            -- While in a motion mode is shown simulate the pressing of the key depending on the mode
+            if registers._previous_mode == 'n' or registers._previous_mode == 'v' then
+                return "\""
+            else
+                return vim.api.nvim_replace_termcodes("<C-R>", true, true, true)
+            end
         end
     end
 end
 
----Popup the registers window which will create a motion from the selected register.
----
----Simple wrapper around `registers.show_window("motion")` so it can be easily used in configurations.
-function registers.show_motion_window()
-    return registers.show_window("motion")
-end
-
----Popup the registers window which will create a paste from the selected register.
----
----Simple wrapper around `registers.show_window("paste")` so it can be easily used in configurations.
-function registers.show_paste_window()
-    return registers.show_window("paste")
-end
-
----Popup the registers window which will create a insert from the selected register.
----
----Simple wrapper around `registers.show_window("insert")` so it can be easily used in configurations.
-function registers.show_insert_window()
-    return registers.show_window("insert")
-end
-
 ---Close the window.
-function registers.close_window()
-    if not registers._window then
-        -- There's nothing to close
-        return
-    end
-
-    vim.api.nvim_win_close(registers._window, true)
-    registers._window = nil
+---@param options callback_options? Options for firing the callback.
+---@return function Function that can be used to pass to configuration options with callbacks.
+function registers.close_window(options)
+    return registers._handle_delay_callback(options, registers._close_window)
 end
+
+---@class apply_register_options `require("registers").apply_register({...})`
+---@field mode register_mode? How the register should be applied. If `nil` then the mode in which the window is opened is used.
 
 ---Apply the specified register.
----@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
----@param mode register_mode? How the register should be applied.
-function registers.apply_register(register, mode)
-    -- When the current line needs to be selected a window also needs to be open
-    if register == nil and registers._window == nil then
-        vim.api.nvim_err_writeln("registers window isn't open, can't apply register")
-        return
-    end
+---@param options callback_options|apply_register_options? Options for firing the callback.
+---@return function Function that can be used to pass to configuration options with callbacks.
+function registers.apply_register(options)
+    return registers._handle_delay_callback(options--[[@as callback_options]] , function(register, mode)
+        -- When the current line needs to be selected a window also needs to be open
+        if register == nil and registers._window == nil then
+            vim.api.nvim_err_writeln("registers window isn't open, can't apply register")
+            return
+        end
 
-    -- Overwrite the mode
-    if mode then
-        registers._mode = mode
-    end
+        -- Overwrite the mode
+        if options and options.mode then
+            registers._mode = options.mode --[[@as register_mode]]
+        elseif mode then
+            registers._mode = mode
+        end
 
-    registers._apply_register(register)
+        registers._apply_register(register)
+    end)
 end
 
----Paste the specified register.
----
----Simple wrapper around `registers.apply_register(.., "paste")` so it can be easily used in configurations.
----@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
-function registers.paste_register(register)
-    registers.apply_register(register, "paste")
+---Move the cursor up in the window.
+---@param options callback_options? Options for firing the callback.
+---@return function Function that can be used to pass to configuration options with callbacks.
+function registers.move_cursor_up(options)
+    return registers._handle_delay_callback(options, function()
+        if registers._window == nil then
+            vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
+            return
+        end
+
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Up>", true, true, true), "n", true)
+    end)
 end
 
----Create a motion from the specified register.
----
----Simple wrapper around `registers.apply_register(.., "motion")` so it can be easily used in configurations.
----@param register string? Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
-function registers.motion_register(register)
-    registers.apply_register(register, "motion")
+---Move the cursor down in the window.
+---@param options callback_options? Options for firing the callback.
+---@return function Function that can be used to pass to configuration options with callbacks.
+function registers.move_cursor_down(options)
+    return registers._handle_delay_callback(options, function()
+        if registers._window == nil then
+            vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
+            return
+        end
+
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Down>", true, true, true), "n", true)
+    end)
+end
+
+---@class move_cursor_to_register_options `require("registers").move_cursor_to_register({...})`
+---@field register string Which register to move the cursor to.
+
+---Move the cursor to the specified register.
+---@param options callback_options?|move_cursor_to_register_options Options for firing the callback.
+---@return function Function that can be used to pass to configuration options with callbacks.
+function registers.move_cursor_to_register(options)
+    return registers._handle_delay_callback(options--[[@as callback_options]] , function()
+        registers._move_cursor_to_register(options.register)
+    end)
 end
 
 ---Create the window and the buffer.
@@ -372,7 +404,7 @@ function registers._create_window()
     vim.api.nvim_create_autocmd("BufLeave", {
         group = vim.api.nvim_create_augroup("RegistersWindow", {}),
         pattern = "<buffer>",
-        callback = registers.close_window,
+        callback = registers._close_window,
     })
 
     -- Make the buffer content cut-off instead of starting on new line
@@ -408,24 +440,16 @@ function registers._create_window()
     end
 end
 
----Move the cursor up in the window.
-function registers.move_cursor_up()
-    if registers._window == nil then
-        vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
+---Close the window.
+---@private
+function registers._close_window()
+    if not registers._window then
+        -- There's nothing to close
         return
     end
 
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Up>", true, true, true), "n", true)
-end
-
----Move the cursor down in the window.
-function registers.move_cursor_down()
-    if registers._window == nil then
-        vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
-        return
-    end
-
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Down>", true, true, true), "n", true)
+    vim.api.nvim_win_close(registers._window, true)
+    registers._window = nil
 end
 
 ---Fill the arrays with the register values.
@@ -548,7 +572,14 @@ function registers._fill_mappings()
     -- Create mappings for the register keys if applicable
     if registers.options.bind_keys then
         for _, register in ipairs(registers._all_registers) do
-            local register_func = function() registers.options.bind_keys.registers(register, registers._mode) end
+            local register_func = function()
+                -- Always move the cursor to the selected line in case there's a delay, unfortunately there's no way to know if that's the case at this time so it's quite inefficient when there's no delay
+                registers._move_cursor_to_register(register)
+
+
+                -- Apply the mapping
+                registers.options.bind_keys.registers(register, registers._mode)
+            end
 
             -- Pressing the character of a register will also apply it
             registers._mappings[register] = register_func
@@ -635,7 +666,7 @@ function registers._apply_register(register)
     end
 
     -- Close the window
-    registers.close_window()
+    registers._close_window()
 
     -- Handle the different modes
     if registers._mode == "insert" then
@@ -696,6 +727,30 @@ function registers._apply_register(register)
             vim.cmd("let @+=@" .. register)
         else
             vim.api.nvim_err_writeln("No clipboard available")
+        end
+    end
+end
+
+---Move the cursor to the specified register.
+---@param register string The register to move to, if it can't be found nothing is done.
+---@private
+function registers._move_cursor_to_register(register)
+    if registers._window == nil then
+        vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
+        return
+    end
+
+    -- Find the matching register so we know where to put the cursor
+    for i = 1, #registers._register_values do
+        local register_info = registers._register_values[i]
+        if register_info.register == register then
+            -- Move the cursor
+            vim.api.nvim_win_set_cursor(registers._window, { i, 0 })
+
+            -- Redraw the line so it gets highlighted
+            vim.api.nvim_command("silent! redraw")
+
+            return
         end
     end
 end
@@ -862,6 +917,26 @@ function registers._highlight_for_sign(register)
         q = hl.named, r = hl.named, s = hl.named, t = hl.named, u = hl.named, v = hl.named, w = hl.named, x = hl.named,
         y = hl.named, z = hl.named,
     })[register]
+end
+
+---Handle the calling of the callback function based on the options, so things like delays can be added.
+---@param options callback_options? Options to apply to the callback function.
+---@param cb function Callback function to trigger.
+---@return function Wrapped callback function applying the options.
+---@nodiscard
+---@private
+function registers._handle_delay_callback(options, cb)
+    local delay = (options and options.delay) or 0
+
+    if delay == 0 then
+        -- Return the callback so it can be immediately called without any defer
+        return cb
+    else
+        return function()
+            -- Sleep for delay before calling the function
+            vim.defer_fn(cb, delay * 1000)
+        end
+    end
 end
 
 ---All available registers.

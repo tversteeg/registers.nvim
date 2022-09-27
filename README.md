@@ -51,7 +51,7 @@ Configuration options can be found in Neovim's documentation after installing wi
 
 ### Default values
 
-<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=107-159) -->
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=122-173) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 ```lua
         show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
@@ -61,19 +61,18 @@ Configuration options can be found in Neovim's documentation after installing wi
         trim_whitespace = true,
         hide_only_whitespace = true,
         show_register_types = true,
-        delay = 0,
 
         bind_keys = {
-            normal = registers.show_motion_window,
-            visual = registers.show_motion_window,
-            insert = registers.show_insert_window,
-            registers = registers.apply_register,
-            return_key = registers.apply_register,
-            escape = registers.close_window,
-            ctrl_n = registers.move_cursor_down,
-            ctrl_p = registers.move_cursor_up,
-            ctrl_j = registers.move_cursor_down,
-            ctrl_k = registers.move_cursor_up,
+            normal = registers.show_window({ mode = "motion" }),
+            visual = registers.show_window({ mode = "motion" }),
+            insert = registers.show_window({ mode = "insert" }),
+            registers = registers.apply_register({ delay = 0.1 }),
+            return_key = registers.apply_register(),
+            escape = registers.close_window(),
+            ctrl_n = registers.move_cursor_down(),
+            ctrl_p = registers.move_cursor_up(),
+            ctrl_j = registers.move_cursor_down(),
+            ctrl_k = registers.move_cursor_up(),
         },
 
         symbols = {

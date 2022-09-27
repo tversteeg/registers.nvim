@@ -22,6 +22,22 @@ use {
 }
 <
 
+Keys can be bound using functions, to make it easier for use I've made all functions except `registers.setup()` return callback functions that can be configured and passed to fields in the `bind_keys` example.
+
+For example, to apply a delay of a second after selecting the register with it's key (for example pressing the '0' key to apply the '0' register when it's open):
+use {
+  "tversteeg/registers.nvim",
+  config = function()
+    local registers = require("registers")
+    registers.setup({
+      bind_keys = {
+        registers = registers.apply_register({ delay = 1 }),
+      },
+    })
+  end
+}
+<
+
 ================================================================================
 `registers.setup` configuration options.                               *options*
 
@@ -31,7 +47,6 @@ options                                                                *options*
     Fields: ~
         {show}                   (string)                     Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
         {show_empty}             (boolean)                    Show the registers which aren't filled in a separate line. Default is `true`.
-        {delay}                  (number)                     How long, in seconds, to wait before opening the window. Default is `0`.
         {register_user_command}  (boolean)                    Whether to register the `:Registers` user command. Default is `true`.
         {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard. Default is `true`.
         {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
@@ -56,16 +71,16 @@ bind_keys_options                                            *bind_keys_options*
     `require("registers").setup({ bind_keys = {...} })`
 
     Fields: ~
-        {normal}      (fun()|false)                               Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_motion_window`.
-        {visual}      (fun()|false)                               Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_motion_window`.
-        {insert}      (fun()|false)                               Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_insert_window`.
-        {registers}   (fun(register:string?,mode:register_mode))  Function to map to the register selected by pressing it's key. Default is `registers.apply_register`.
-        {return_key}  (fun(register:string?,mode:register_mode))  Function to map to <CR> in the window. Default is `registers.apply_register`.
-        {escape}      (fun(register:string?,mode:register_mode))  Function to map to <ESC> in the window. Default is `registers.close_window`.
-        {ctrl_n}      (fun()|false)                               Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down`.
-        {ctrl_p}      (fun()|false)                               Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up`.
-        {ctrl_j}      (fun()|false)                               Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down`.
-        {ctrl_k}      (fun()|false)                               Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up`.
+        {normal}      (fun()|false)                               Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
+        {visual}      (fun()|false)                               Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
+        {insert}      (fun()|false)                               Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
+        {registers}   (fun(register:string?,mode:register_mode))  Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
+        {return_key}  (fun(register:string?,mode:register_mode))  Function to map to <CR> in the window. Default is `registers.apply_register()`.
+        {escape}      (fun(register:string?,mode:register_mode))  Function to map to <ESC> in the window. Default is `registers.close_window()`.
+        {ctrl_n}      (fun()|false)                               Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_p}      (fun()|false)                               Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
+        {ctrl_j}      (fun()|false)                               Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_k}      (fun()|false)                               Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
 
 
 window_border                                                    *window_border*
@@ -146,11 +161,28 @@ registers.setup({options})                                     *registers.setup*
         <
 
 
-registers.show_window({mode})                            *registers.show_window*
+callback_options                                              *callback_options*
+    `require("registers")...({...})`
+
+    Fields: ~
+        {delay}  (number)  How long, in seconds, to wait before applying the function. Default is `0`.
+
+
+show_window_options                                        *show_window_options*
+    `require("registers").show_window({...})`
+
+    Fields: ~
+        {mode}  (register_mode?)  How the registers window should handle the selection of registers. Default is `"motion"`.
+
+
+registers.show_window({options})                         *registers.show_window*
     Popup the registers window.
 
     Parameters: ~
-        {mode}  (register_mode?)  How the registers window should handle the selection of registers.
+        {options}  (callback_options|show_window_options?)  Options for firing the callback.
+
+    Returns: ~
+        {function}  that can be used to pass to configuration options with callbacks.
 
     Usage: ~
         >
@@ -159,71 +191,77 @@ registers.show_window({mode})                            *registers.show_window*
 
             -- Define a custom for opening the register window when pressing "r"
             vim.api.nvim_set_keymap("n", "r", "", {
-                callback = function()
-                    -- The "paste" argument means that when a register is selected it will automatically be pasted
-                    return require("registers").show("paste")
-                end,
+                -- The "paste" argument means that when a register is selected it will automatically be pasted
+                callback = require("registers").show_window({ mode = "paste" }),
                 -- This is required for the registers window to function
                 expr = true
             })
         <
 
 
-registers.show_motion_window()                    *registers.show_motion_window*
-    Popup the registers window which will create a motion from the selected register.
-
-    Simple wrapper around `registers.show_window("motion")` so it can be easily used in configurations.
-
-
-registers.show_paste_window()                      *registers.show_paste_window*
-    Popup the registers window which will create a paste from the selected register.
-
-    Simple wrapper around `registers.show_window("paste")` so it can be easily used in configurations.
-
-
-registers.show_insert_window()                    *registers.show_insert_window*
-    Popup the registers window which will create a insert from the selected register.
-
-    Simple wrapper around `registers.show_window("insert")` so it can be easily used in configurations.
-
-
-registers.close_window()                                *registers.close_window*
+registers.close_window({options})                       *registers.close_window*
     Close the window.
 
+    Parameters: ~
+        {options}  (callback_options?)  Options for firing the callback.
 
-                                                      *registers.apply_register*
-registers.apply_register({register}, {mode})
+    Returns: ~
+        {function}  that can be used to pass to configuration options with callbacks.
+
+
+apply_register_options                                  *apply_register_options*
+    `require("registers").apply_register({...})`
+
+    Fields: ~
+        {mode}  (register_mode?)  How the register should be applied. If `nil` then the mode in which the window is opened is used.
+
+
+registers.apply_register({options})                   *registers.apply_register*
     Apply the specified register.
 
     Parameters: ~
-        {register}  (string?)         Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
-        {mode}      (register_mode?)  How the register should be applied.
+        {options}  (callback_options|apply_register_options?)  Options for firing the callback.
+
+    Returns: ~
+        {function}  that can be used to pass to configuration options with callbacks.
 
 
-registers.paste_register({register})                  *registers.paste_register*
-    Paste the specified register.
-
-    Simple wrapper around `registers.apply_register(.., "paste")` so it can be easily used in configurations.
-
-    Parameters: ~
-        {register}  (string?)  Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
-
-
-registers.motion_register({register})                *registers.motion_register*
-    Create a motion from the specified register.
-
-    Simple wrapper around `registers.apply_register(.., "motion")` so it can be easily used in configurations.
-
-    Parameters: ~
-        {register}  (string?)  Which register to apply, when `nil` is used the current line of the window is used, with the prerequisite that the window is opened.
-
-
-registers.move_cursor_up()                            *registers.move_cursor_up*
+registers.move_cursor_up({options})                   *registers.move_cursor_up*
     Move the cursor up in the window.
 
+    Parameters: ~
+        {options}  (callback_options?)  Options for firing the callback.
 
-registers.move_cursor_down()                        *registers.move_cursor_down*
+    Returns: ~
+        {function}  that can be used to pass to configuration options with callbacks.
+
+
+registers.move_cursor_down({options})               *registers.move_cursor_down*
     Move the cursor down in the window.
+
+    Parameters: ~
+        {options}  (callback_options?)  Options for firing the callback.
+
+    Returns: ~
+        {function}  that can be used to pass to configuration options with callbacks.
+
+
+move_cursor_to_register_options                *move_cursor_to_register_options*
+    `require("registers").move_cursor_to_register({...})`
+
+    Fields: ~
+        {register}  (string)  Which register to move the cursor to.
+
+
+                                             *registers.move_cursor_to_register*
+registers.move_cursor_to_register({options})
+    Move the cursor to the specified register.
+
+    Parameters: ~
+        {options}  (callback_options?|move_cursor_to_register_options)  Options for firing the callback.
+
+    Returns: ~
+        {function}  that can be used to pass to configuration options with callbacks.
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
