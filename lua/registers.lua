@@ -193,7 +193,7 @@ function registers.setup(options)
 
     -- Create the user command to manually open the window with :Registers
     if registers.options.register_user_command then
-        vim.api.nvim_create_user_command("Registers", registers.show_window, {})
+        vim.api.nvim_create_user_command("Registers", registers.show_window({ mode = "paste" }), {})
     end
 
     -- Create a namespace for the highlights and signs
