@@ -36,8 +36,6 @@ end
 
 detect_config("show", "string", function(new) return { show = new } end)
 detect_config("system_clip", "boolean", function(new) return { system_clipboard = new } end)
-detect_config("delay", "number", function(new) return { delay = new } end)
-detect_config("key_sleep", "number", function(new) return { sleep_after_key = new } end)
 detect_config("show_empty_registers", "boolean", function(new) return { show_empty = new } end)
 detect_config("trim_whitespace", "boolean", function(new) return { trim_whitespace = new } end)
 detect_config("hide_only_whitespace", "boolean", function(new) return { hide_only_whitespace = new } end)
