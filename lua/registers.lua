@@ -617,10 +617,145 @@ function registers._set_bindings()
         vim.api.nvim_buf_set_keymap(registers._buffer, "v", key, '', map_options)
     end
 
-    -- Map all keys
-    if registers._key_should_be_bound("registers") then
-        for key, callback in pairs(registers._mappings) do
-            set_keymap_all_modes(key, callback)
+-- Apply a register
+local function apply_register(register)
+	local sleep = true
+
+    -- Keep track of how we select the register
+    local register_selected_with_return = register == nil
+
+	-- Try to find the line of the register
+	local line
+	if not register then
+		-- If no register is passed use the currently selected line
+
+		-- Get the currently selected line
+		line = unpack(vim.api.nvim_win_get_cursor(win))
+
+		-- Don't sleep when we select it
+		sleep = false
+
+		-- Find the line matching the cursor
+		local register_line = register_lines[line]
+
+		-- If a non-register line is selected just close the window and do nothing
+		if register_line.ignore then
+			-- Close the window
+			close_window()
+
+			return
+		end
+
+		-- Set the register from the line selected
+		register = register_line.register
+	else
+		-- Find the matching register line and get the line number
+		for i, register_line in ipairs(register_lines) do
+			if register_line.register == register then
+				line = i
+				break
+			end
+		end
+	end
+
+	-- Move the cursor to the register selected if applicable
+	if sleep and line and config().register_key_sleep then
+		-- Move the cursor
+		vim.api.nvim_win_set_cursor(win, {line, 0})
+
+		-- Redraw so the line get's highlighted
+		vim.api.nvim_command("silent! redraw")
+
+		-- Wait for some time before closing the window
+		vim.api.nvim_command(("silent! sleep %d"):format(config().register_key_sleep))
+	end
+
+	-- Close the window
+	close_window()
+
+	-- Handle insert mode differently
+	if invocation_mode == "i" then
+		-- Get the proper keycode for <C-R>
+		local key = vim.api.nvim_replace_termcodes("<c-r>", true, true, true)
+
+		if register == "=" then
+			-- Apply <c-r>= again in input mode so the user can enter their query
+			vim.api.nvim_feedkeys(key .. "=", "n", true)
+		else
+			-- Capture the contents of the "=" register so it can be reset later
+			local old_expr_content = register_contents("=", 1)
+
+			local submit = vim.api.nvim_replace_termcodes("<CR>", true, true, true)
+			-- Let execute the selected register content using `=` register and insert the result
+			vim.api.nvim_feedkeys(key .. "=@" .. register .. submit, "n", true)
+
+			-- Recover the "=" register
+			-- This only works in neovim >= 0.5
+			-- TODO: support 0.4
+			if vim.api.nvim_call_function("has", {"nvim-0.5"}) == 1 then
+				vim.defer_fn(function()
+					vim.api.nvim_call_function("setreg", {"=", old_expr_content})
+				end, 100)
+			end
+		end
+	else
+        local paste_in_normal_mode = config().paste_in_normal_mode
+        local should_paste_in_normal_mode = paste_in_normal_mode == 1 or (paste_in_normal_mode == 2 and register_selected_with_return)
+
+		-- Define the keys pressed based on the mode
+		local keys
+		if invocation_mode == "n" and not should_paste_in_normal_mode then
+			-- When the popup is opened with the " key in normal mode
+			if operator_count > 0 then
+				-- Allow 10".. using the stored operator count
+				keys = operator_count .. "\"" .. register
+			else
+				-- Don't prepend the count if it's not set, because that will
+				-- influence the behavior of the operator following
+				keys = "\"" .. register
+			end
+		elseif invocation_mode == "v" then
+			-- When the popup is opened with the " key in visual mode
+			-- Reset the visual selection
+			keys = "gv\"" .. register
+		else
+			-- When the popup is opened without any mode passed, i.e. directly from the
+			-- function call, or if "registers_paste_in_normal_mode" is set, automatically paste it
+			keys = "\"" .. register .. "p"
+		end
+
+		-- Get the current mode in the window
+		local current_mode = vim.api.nvim_get_mode().mode
+
+		-- "Press" the key with the register key and paste it if applicable
+		vim.api.nvim_feedkeys(keys, current_mode, true)
+		if config().system_clip == 1 then
+			if vim.fn.has("clipboard") == 1 then
+				vim.cmd('let @*=@'..register)
+			else
+				vim.api.nvim_err_writeln("No clipboard available")
+			end
+		end
+
+	end
+end
+
+-- Set the buffer keyboard mapping for the window
+local function set_mappings()
+	local mappings = {
+		-- Apply the currently selected register
+		["<CR>"] = "apply_register()",
+		["<ESC>"] = "close_window()",
+	}
+
+	-- Create a mapping for all the registers
+    for _, reg in ipairs(ALL_REGISTERS) do
+        mappings[reg] = ("apply_register(%q)"):format(reg)
+
+        -- Also map upper case characters if applicable
+        local reg_upper_case = reg:upper()
+        if reg_upper_case ~= reg then
+            mappings[reg_upper_case] = ("apply_register(%q)"):format(reg_upper_case)
         end
     end
 

@@ -104,4 +104,17 @@ Configuration options can be found in Neovim's documentation after installing wi
             named = "Todo",
         },
 ```
-<!-- MARKDOWN-AUTO-DOCS:END -->
+
+### `System clipboard`
+
+Transfer selected register to system clipboard.
+
+#### Default
+
+`0`
+
+#### Example
+
+```vim
+let g:system_clip = 1
+```
