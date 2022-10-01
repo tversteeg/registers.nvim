@@ -116,7 +116,7 @@ local registers = {}
 ---@field named string? Highlight group for the named registers, `a-z`. Default is `"Todo"`.
 
 ---Get the default values for all options.
----@return options default values for all options
+---@return options options Default values for all options.
 function registers.default_options()
     return {
         show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
@@ -216,7 +216,7 @@ end
 
 ---Popup the registers window.
 ---@param options callback_options|show_window_options? Options for firing the callback.
----@return function Function that can be used to pass to configuration options with callbacks.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
 ---@usage [[
 ----- Disable all key bindings
 ---require("registers").setup({ bind_keys = false })
@@ -268,7 +268,7 @@ end
 
 ---Close the window.
 ---@param options callback_options? Options for firing the callback.
----@return function Function that can be used to pass to configuration options with callbacks.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.close_window(options)
     return registers._handle_delay_callback(options, registers._close_window)
 end
@@ -278,7 +278,7 @@ end
 
 ---Apply the specified register.
 ---@param options callback_options|apply_register_options? Options for firing the callback.
----@return function Function that can be used to pass to configuration options with callbacks.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.apply_register(options)
     return registers._handle_delay_callback(options--[[@as callback_options]] , function(register, mode)
         -- When the current line needs to be selected a window also needs to be open
@@ -300,7 +300,7 @@ end
 
 ---Move the cursor up in the window.
 ---@param options callback_options? Options for firing the callback.
----@return function Function that can be used to pass to configuration options with callbacks.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_up(options)
     return registers._handle_delay_callback(options, function()
         if registers._window == nil then
@@ -314,7 +314,7 @@ end
 
 ---Move the cursor down in the window.
 ---@param options callback_options? Options for firing the callback.
----@return function Function that can be used to pass to configuration options with callbacks.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_down(options)
     return registers._handle_delay_callback(options, function()
         if registers._window == nil then
@@ -330,11 +330,16 @@ end
 ---@field register string Which register to move the cursor to.
 
 ---Move the cursor to the specified register.
----@param options callback_options?|move_cursor_to_register_options Options for firing the callback.
----@return function Function that can be used to pass to configuration options with callbacks.
+---@param options callback_options|move_cursor_to_register_options Options for firing the callback.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_to_register(options)
+    if not options.register then
+        vim.api.nvim_err_writeln("a register must be passed to `registers.move_cursor_to_register`")
+        return function() end
+    end
+
     return registers._handle_delay_callback(options--[[@as callback_options]] , function()
-        registers._move_cursor_to_register(options.register)
+        registers._move_cursor_to_register(options.register--[[@as string]] )
     end)
 end
 
@@ -433,6 +438,8 @@ function registers._create_window()
 
     -- Ensure the window shows up
     vim.cmd("redraw!")
+
+    -- Weird workaround for when using a count, the window won't draw
 
     -- Put the window in normal mode when using a visual selection
     if registers._previous_mode == 'v' or registers._previous_mode == '^V' or registers._previous_mode == 'V' then
@@ -922,7 +929,7 @@ end
 ---Handle the calling of the callback function based on the options, so things like delays can be added.
 ---@param options callback_options? Options to apply to the callback function.
 ---@param cb function Callback function to trigger.
----@return function Wrapped callback function applying the options.
+---@return function callback Wrapped callback function applying the options.
 ---@nodiscard
 ---@private
 function registers._handle_delay_callback(options, cb)

@@ -141,7 +141,7 @@ registers.default_options()                          *registers.default_options*
     Get the default values for all options.
 
     Returns: ~
-        {options}  values for all options
+        {options}  Default values for all options.
 
 
 ================================================================================
@@ -182,7 +182,7 @@ registers.show_window({options})                         *registers.show_window*
         {options}  (callback_options|show_window_options?)  Options for firing the callback.
 
     Returns: ~
-        {function}  that can be used to pass to configuration options with callbacks.
+        {function}  Function that can be used to pass to configuration options with callbacks.
 
     Usage: ~
         >
@@ -206,7 +206,7 @@ registers.close_window({options})                       *registers.close_window*
         {options}  (callback_options?)  Options for firing the callback.
 
     Returns: ~
-        {function}  that can be used to pass to configuration options with callbacks.
+        {function}  Function that can be used to pass to configuration options with callbacks.
 
 
 apply_register_options                                  *apply_register_options*
@@ -223,7 +223,7 @@ registers.apply_register({options})                   *registers.apply_register*
         {options}  (callback_options|apply_register_options?)  Options for firing the callback.
 
     Returns: ~
-        {function}  that can be used to pass to configuration options with callbacks.
+        {function}  Function that can be used to pass to configuration options with callbacks.
 
 
 registers.move_cursor_up({options})                   *registers.move_cursor_up*
@@ -233,7 +233,7 @@ registers.move_cursor_up({options})                   *registers.move_cursor_up*
         {options}  (callback_options?)  Options for firing the callback.
 
     Returns: ~
-        {function}  that can be used to pass to configuration options with callbacks.
+        {function}  Function that can be used to pass to configuration options with callbacks.
 
 
 registers.move_cursor_down({options})               *registers.move_cursor_down*
@@ -243,7 +243,7 @@ registers.move_cursor_down({options})               *registers.move_cursor_down*
         {options}  (callback_options?)  Options for firing the callback.
 
     Returns: ~
-        {function}  that can be used to pass to configuration options with callbacks.
+        {function}  Function that can be used to pass to configuration options with callbacks.
 
 
 move_cursor_to_register_options                *move_cursor_to_register_options*
@@ -258,10 +258,10 @@ registers.move_cursor_to_register({options})
     Move the cursor to the specified register.
 
     Parameters: ~
-        {options}  (callback_options?|move_cursor_to_register_options)  Options for firing the callback.
+        {options}  (callback_options|move_cursor_to_register_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  that can be used to pass to configuration options with callbacks.
+        {function}  Function that can be used to pass to configuration options with callbacks.
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
