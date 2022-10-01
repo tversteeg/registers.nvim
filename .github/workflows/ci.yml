@@ -11,7 +11,7 @@ jobs:
 
       - name: generate help
         run: |
-          curl -Lq https://github.com/numToStr/lemmy-help/releases/v0.6.0/lemmy-help-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          curl -Lq https://github.com/numToStr/lemmy-help/releases/download/v0.6.0/lemmy-help-x86_64-unknown-linux-gnu.tar.gz | tar xz
           ./lemmy-help lua/registers.lua > doc/registers.txt
 
       - name: embed codeblocks
