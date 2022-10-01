@@ -5,6 +5,9 @@ registers                                                            *registers*
         {options}  (options)
 
 
+================================================================================
+Introduction                                                             *intro*
+
 Registers.nvim is a minimal but very configurable Neovim plugin.
 
 Almost everything can be configured using the mandatory `registers.setup({})` method.
