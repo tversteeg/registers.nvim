@@ -1,5 +1,3 @@
----@meta
-
 ---@class registers
 ---@field options options
 ---@field private _mode string
@@ -14,6 +12,7 @@
 local registers = {}
 
 ---@mod intro Introduction
+
 ---@brief [[
 ---Registers.nvim is a minimal but very configurable Neovim plugin.
 ---
@@ -47,6 +46,7 @@ local registers = {}
 ---@brief ]]
 
 ---@mod options `registers.setup` configuration options.
+
 ---@class options `require("registers").setup({...})`
 ---@field show string Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
 ---@field show_empty boolean Show the registers which aren't filled in a separate line. Default is `true`.
