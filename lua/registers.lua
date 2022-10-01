@@ -283,6 +283,7 @@ end
 ---`require("registers").apply_register({...})`
 ---@class apply_register_options
 ---@field mode register_mode? How the register should be applied. If `nil` then the mode in which the window is opened is used.
+---@field keep_open_until_keypress boolean? If `true`, keep the window open until another key is pressed, only applicable when the mode is `"motion"`.
 
 ---Apply the specified register.
 ---@param options callback_options|apply_register_options? Options for firing the callback.
@@ -302,7 +303,7 @@ function registers.apply_register(options)
             registers._mode = mode
         end
 
-        registers._apply_register(register)
+        registers._apply_register(register, options and options.keep_open_until_keypress)
     end)
 end
 
@@ -670,15 +671,25 @@ function registers._bind_global_key(index, key, mode)
 end
 
 ---Apply the register and close the window.
----@param register string? Which register to apply or the current line
+---@param register string? Which register to apply or the current line.
+---@param keep_open_until_keypress boolean? Keep the window open until a key is pressed.
 ---@private
-function registers._apply_register(register)
+function registers._apply_register(register, keep_open_until_keypress)
     -- Get the register symbol also when selecting it manually
     register = registers._register_symbol(register)
 
     -- Do nothing if no valid register is chosen
     if not register then
         return
+    end
+
+    local key_to_press_at_the_end
+    if registers._mode == "paste" then
+        -- "Press" the 'p' key at the end so the selected register gets pasted
+        key_to_press_at_the_end = "p"
+    elseif keep_open_until_keypress and registers._mode == "motion" then
+        -- Handle the special case when the window needs to be open until a key is pressed
+        key_to_press_at_the_end = vim.fn.getcharstr()
     end
 
     -- Close the window
@@ -728,9 +739,9 @@ function registers._apply_register(register)
                 keys = keys .. "\"" .. register
             end
 
-            -- Paste the register if applicable
-            if registers._mode == "paste" then
-                keys = keys .. "p"
+            -- Handle the key that might needs to be pressed
+            if key_to_press_at_the_end then
+                keys = keys .. key_to_press_at_the_end
             end
 
             vim.api.nvim_feedkeys(keys, "n", true)

@@ -210,7 +210,8 @@ apply_register_options                                  *apply_register_options*
     `require("registers").apply_register({...})`
 
     Fields: ~
-        {mode}  (register_mode?)  How the register should be applied. If `nil` then the mode in which the window is opened is used.
+        {mode}                      (register_mode?)  How the register should be applied. If `nil` then the mode in which the window is opened is used.
+        {keep_open_until_keypress}  (boolean?)        If `true`, keep the window open until another key is pressed, only applicable when the mode is `"motion"`.
 
 
 registers.apply_register({options})                   *registers.apply_register*
