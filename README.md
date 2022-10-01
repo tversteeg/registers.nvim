@@ -16,12 +16,9 @@ The popup window showing the registers and their values can be opened in one of 
 
 - Call `:Registers`
 - Press <kbd>"</kbd> in _normal_ or _visual_ mode
-
-![normal](docs/normal.png?raw=true)
-
 - Press <kbd>Ctrl</kbd><kbd>R</kbd> in _insert_ mode
 
-![insert](docs/insert.png?raw=true)
+![preview](.github/img/preview.png?raw=true)
 
 Empty registers are not shown by default.
 
@@ -49,7 +46,7 @@ use {
 This plugin can be configured by passing a table to `require("registers").setup({})`.
 Configuration options can be found in Neovim's documentation after installing with: [`:h registers`](doc/registers.txt).
 
-### Default values
+### Default Values
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=122-173) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
