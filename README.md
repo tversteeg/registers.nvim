@@ -48,6 +48,14 @@ Configuration options can be found in Neovim's documentation after installing wi
 
 ### Default Values
 
+```lua
+use {
+    "tversteeg/registers.nvim",
+    config = function()
+        local registers = require("registers")
+        registers.setup({
+```
+
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=122-173) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 ```lua
@@ -103,4 +111,10 @@ Configuration options can be found in Neovim's documentation after installing wi
             history = "Number",
             named = "Todo",
         },
+```
+
+```lua
+        })
+    end,
+}
 ```
