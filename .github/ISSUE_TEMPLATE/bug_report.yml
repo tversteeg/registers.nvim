@@ -12,7 +12,7 @@ body:
   - type: dropdown
     id: platform-select
     attributes:
-      label: Please select which platform you are using.
+      label: Please select which platform you are using
       options:
         - 'Linux'
         - 'Mac'
@@ -36,3 +36,23 @@ body:
       label: Describe the bug
     validations:
       required: true
+      
+  - type: textarea
+    id: version
+    attributes:
+      label: Neovim version
+      description: Paste the output of `nvim -v` here
+    validations:
+      required: true
+      
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Paste your Neovim setup for registers.nvim here, probably a snippet from `init.lua`
+      value: |
+        local registers = require("registers")
+        registers.setup({
+          ..
+        })
+      render: lua
