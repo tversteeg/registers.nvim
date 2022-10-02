@@ -344,8 +344,7 @@ end
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_to_register(options)
     if not options.register then
-        vim.api.nvim_err_writeln("a register must be passed to `registers.move_cursor_to_register`")
-        return function() end
+        error("a register must be passed to `registers.move_cursor_to_register`")
     end
 
     return registers._handle_delay_callback(options--[[@as callback_options]] , function()
@@ -452,7 +451,7 @@ function registers._create_window()
     -- Weird workaround for when using a count, the window won't draw
 
     -- Put the window in normal mode when using a visual selection
-    if registers._previous_mode == 'v' or registers._previous_mode == '^V' or registers._previous_mode == 'V' then
+    if registers._previous_mode_is_visual() then
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-\\><C-N>", true, true, true), "n", true)
     end
 end
@@ -718,14 +717,13 @@ function registers._apply_register(register, keep_open_until_keypress)
             -- Recover the "=" register with a delay otherwise it doesn't get applied
             vim.schedule(function() vim.fn.setreg("=", old_expr_content) end)
         end
-    elseif registers._previous_mode == "n"
-        or registers._previous_mode == "v" or registers._previous_mode == "V" or registers._previous_mode == "^V" then
+    elseif registers._previous_mode == "n" or registers._previous_mode_is_visual() then
         -- Simulate the keypresses require to perform the next actions
         vim.schedule(function()
             local keys = ""
 
             -- Go to previous visual selection if applicable
-            if registers._previous_mode == "v" or registers._previous_mode == "V" or registers._previous_mode == "^V" then
+            if registers._previous_mode_is_visual() then
                 keys = keys .. "gv"
             end
 
@@ -743,6 +741,8 @@ function registers._apply_register(register, keep_open_until_keypress)
             if key_to_press_at_the_end then
                 keys = keys .. key_to_press_at_the_end
             end
+
+            vim.api.nvim_err_writeln(keys)
 
             vim.api.nvim_feedkeys(keys, "n", true)
         end)
@@ -964,6 +964,16 @@ function registers._handle_delay_callback(options, cb)
             vim.defer_fn(cb, delay * 1000)
         end
     end
+end
+
+---Whether the previous mode is any of the visual selections.
+---@return boolean is_visual Whether the previous mode is a visual selection.
+---@private
+function registers._previous_mode_is_visual()
+    return registers._previous_mode == 'v'
+        or registers._previous_mode == '^V'
+        or registers._previous_mode == 'V'
+        or registers._previous_mode == '\22'
 end
 
 ---All available registers.
