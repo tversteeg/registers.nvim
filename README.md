@@ -118,3 +118,13 @@ use {
     end,
 }
 ```
+
+## Compatibility
+
+### [`LunarWatcher/auto-pairs`](https://github.com/LunarWatcher/auto-pairs)
+
+To add the plugin window to the blacklist of auto-pairs register the following Vim variable:
+
+```vim
+let g:AutoPairsFiletypeBlacklist = ['registers']
+```
