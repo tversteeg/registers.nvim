@@ -1,18 +1,3 @@
----@class registers
----@field options options
----@field private _mode string
----@field private _previous_mode string
----@field private _namespace string
----@field private _operator_count integer
----@field private _window integer?
----@field private _buffer integer?
----@field private _register_values { regcontents: string, line: string, register: string, type_symbol?: string, regtype: string }[]
----@field private _empty_registers string[]
----@field private _mappings table<string, function>
-local registers = {}
-
----@mod intro Introduction
-
 ---@brief [[
 ---Registers.nvim is a minimal but very configurable Neovim plugin.
 ---
@@ -45,7 +30,20 @@ local registers = {}
 ---<
 ---@brief ]]
 
----@mod options `registers.setup` configuration options.
+---@class registers
+---@field options options
+---@field private _mode string
+---@field private _previous_mode string
+---@field private _namespace string
+---@field private _operator_count integer
+---@field private _window integer?
+---@field private _buffer integer?
+---@field private _register_values { regcontents: string, line: string, register: string, type_symbol?: string, regtype: string }[]
+---@field private _empty_registers string[]
+---@field private _mappings table<string, function>
+local registers = {}
+
+---@mod setup `registers.setup` configuration options.
 
 ---`require("registers").setup({...})`
 ---@class options
@@ -179,8 +177,6 @@ function registers.default_options()
     }
 end
 
----@mod functions Functions
-
 ---Let the user configure this plugin.
 ---
 ---This will also register the default user commands and key bindings.
@@ -212,6 +208,8 @@ function registers.setup(options)
     registers._bind_global_key("visual", "\"", "v")
     registers._bind_global_key("insert", "<C-R>", "i")
 end
+
+---@mod callbacks Bindable functions
 
 ---`require("registers")...({...})`
 ---@class callback_options
@@ -276,6 +274,14 @@ end
 ---Close the window.
 ---@param options callback_options? Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
+---@usage [[
+---require("registers").setup({
+---    bind_keys = {
+---        -- Don't apply the register when selecting with Enter but close the window
+---        return_key = require("registers").close_window(),
+---    }
+---})
+---@usage ]]
 function registers.close_window(options)
     return registers._handle_delay_callback(options, registers._close_window)
 end
@@ -288,6 +294,21 @@ end
 ---Apply the specified register.
 ---@param options callback_options|apply_register_options? Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
+---@usage [[
+---require("registers").setup({
+---    bind_keys = {
+---        -- Always paste the register when selecting with Enter
+---        return_key = require("registers").apply_register({ mode = "paste" }),
+---    }
+---})
+---
+---require("registers").setup({
+---    bind_keys = {
+---        -- When pressing a key of the register, wait for another key press before closing the window
+---        registers = require("registers").apply_register({ keep_open_until_keypress = true }),
+---    }
+---})
+---@usage ]]
 function registers.apply_register(options)
     return registers._handle_delay_callback(options--[[@as callback_options]] , function(register, mode)
         -- When the current line needs to be selected a window also needs to be open
