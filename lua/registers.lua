@@ -763,8 +763,6 @@ function registers._apply_register(register, keep_open_until_keypress)
                 keys = keys .. key_to_press_at_the_end
             end
 
-            vim.api.nvim_err_writeln(keys)
-
             vim.api.nvim_feedkeys(keys, "n", true)
         end)
     end
