@@ -6,7 +6,7 @@ Requires Neovim 0.7.0+.
 
 ## Features
 
-- Non-obtrusive, won't influence you're workflow
+- Non-obtrusive, won't influence your workflow
 - Minimal interface, no visual noise
 - Configurable, there's a setting for almost all aspects of this plugin
 
