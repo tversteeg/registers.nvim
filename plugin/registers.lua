@@ -64,7 +64,7 @@ if #settings_detected > 0 then
     -- Merge all settings into a single map
     local settings = {}
     for _, merge in ipairs(settings_detected) do
-        settings = vim.tbl_extend("error", settings, merge)
+        settings = vim.tbl_extend("keep", settings, merge)
     end
 
     vim.notify(([[You have recently updated the plugin 'registers.nvim' to version 2.0 or later.
