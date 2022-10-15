@@ -43,12 +43,14 @@ options                                                                *options*
     Fields: ~
         {show}                   (string)                     Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
         {show_empty}             (boolean)                    Show the registers which aren't filled in a separate line. Default is `true`.
+        {preview}                (boolean)                    Show the how the highlighted register will be applied in the target buffer. Default is `true`.
         {register_user_command}  (boolean)                    Whether to register the `:Registers` user command. Default is `true`.
         {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard. Default is `true`.
         {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
         {hide_only_whitespace}   (boolean)                    Treat registers with only whitespace as empty registers. Default is `true`.
         {show_register_types}    (boolean)                    Show how the register will be applied in the sign bar, the characters can be customized in the `symbols` table. Default is `true`.
-        {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
+        {bind_keys}              (bind_keys_options|boolean)  Which keys to bind, `true` maps all keys and `false` maps no keys.
+        {events}                 (events_options)             Functions that will be called when certain events happen.
         {symbols}                (symbols_options)            Symbols used to replace text in the previous buffer.
         {window}                 (window_options)             Floating window
         {sign_highlights}        (sign_highlights_options)    Highlights for the sign section of the window
@@ -76,6 +78,13 @@ bind_keys_options                                            *bind_keys_options*
         {ctrl_p}      (fun()|false)                               Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
         {ctrl_j}      (fun()|false)                               Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
         {ctrl_k}      (fun()|false)                               Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
+
+
+events_options                                                  *events_options*
+    `require("registers").setup({ events = {...} })`
+
+    Fields: ~
+        {on_register_highlighted}  (fun()|false)  Function that's called when a new register is highlighted when the window is open. Default is `registers.preview_highlighted_register({ if_mode = { "insert", "paste" } })`.
 
 
 window_border                                                    *window_border*
@@ -155,25 +164,19 @@ registers.setup({options})                                     *registers.setup*
 ================================================================================
 Bindable functions                                                   *callbacks*
 
-callback_options                                              *callback_options*
-    `require("registers")...({...})`
-
-    Fields: ~
-        {delay}  (number)  How long, in seconds, to wait before applying the function. Default is `0`.
-
-
 show_window_options                                        *show_window_options*
     `require("registers").show_window({...})`
 
     Fields: ~
-        {mode}  (register_mode?)  How the registers window should handle the selection of registers. Default is `"motion"`.
+        {delay}  (number)          How long, in seconds, to wait before applying the function. Default is `0`.
+        {mode}   (register_mode?)  How the registers window should handle the selection of registers. Default is `"motion"`.
 
 
 registers.show_window({options})                         *registers.show_window*
     Popup the registers window.
 
     Parameters: ~
-        {options}  (callback_options|show_window_options?)  Options for firing the callback.
+        {options}  (show_window_options?)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.
@@ -191,6 +194,15 @@ registers.show_window({options})                         *registers.show_window*
                 expr = true
             })
         <
+
+
+callback_options                                              *callback_options*
+    `require("registers")...({...})`
+
+    Fields: ~
+        {delay}    (number)                         How long, in seconds, to wait before applying the function. Default is `0`.
+        {after}    (function?)                      Callback function that can be chained after the current one.
+        {if_mode}  (register_mode|[register_mode])  Will only be triggered when the registers mode matches it. Default: `{ "paste", "insert", "motion" }`.
 
 
 registers.close_window({options})                       *registers.close_window*
@@ -281,6 +293,17 @@ registers.move_cursor_to_register({options})
 
     Parameters: ~
         {options}  (callback_options|move_cursor_to_register_options)  Options for firing the callback.
+
+    Returns: ~
+        {function}  Function that can be used to pass to configuration options with callbacks.
+
+
+                                        *registers.preview_highlighted_register*
+registers.preview_highlighted_register({options})
+    Show a preview of the highlighted register in the target buffer.
+
+    Parameters: ~
+        {options}  (callback_options)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.

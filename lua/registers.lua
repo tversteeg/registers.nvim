@@ -38,6 +38,7 @@
 ---@field private _operator_count integer
 ---@field private _window integer?
 ---@field private _buffer integer?
+---@field private _preview_buffer integer?
 ---@field private _register_values { regcontents: string, line: string, register: string, type_symbol?: string, regtype: string }[]
 ---@field private _empty_registers string[]
 ---@field private _mappings table<string, function>
@@ -49,12 +50,14 @@ local registers = {}
 ---@class options
 ---@field show string Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
 ---@field show_empty boolean Show the registers which aren't filled in a separate line. Default is `true`.
+---@field preview boolean Show the how the highlighted register will be applied in the target buffer. Default is `true`.
 ---@field register_user_command boolean Whether to register the `:Registers` user command. Default is `true`.
 ---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
 ---@field trim_whitespace boolean Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
 ---@field hide_only_whitespace boolean Treat registers with only whitespace as empty registers. Default is `true`.
 ---@field show_register_types boolean Show how the register will be applied in the sign bar, the characters can be customized in the `symbols` table. Default is `true`.
----@field bind_keys bind_keys_options|boolean Which keys to bind, `true` maps all keys and `false` maps no keys. Default is `true`.
+---@field bind_keys bind_keys_options|boolean Which keys to bind, `true` maps all keys and `false` maps no keys.
+---@field events events_options Functions that will be called when certain events happen.
 ---@field symbols symbols_options Symbols used to replace text in the previous buffer.
 ---@field window window_options Floating window
 ---@field sign_highlights sign_highlights_options Highlights for the sign section of the window
@@ -76,6 +79,10 @@ local registers = {}
 ---@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
 ---@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
 ---@field ctrl_k fun()|false Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
+--
+---`require("registers").setup({ events = {...} })`
+---@class events_options
+---@field on_register_highlighted fun()|false Function that's called when a new register is highlighted when the window is open. Default is `registers.preview_highlighted_register({ if_mode = { "insert", "paste" } })`.
 
 ---@alias window_border
 ---| '"none"'
@@ -134,13 +141,19 @@ function registers.default_options()
             normal = registers.show_window({ mode = "motion" }),
             visual = registers.show_window({ mode = "motion" }),
             insert = registers.show_window({ mode = "insert" }),
+
             registers = registers.apply_register({ delay = 0.1 }),
             return_key = registers.apply_register(),
             escape = registers.close_window(),
+
             ctrl_n = registers.move_cursor_down(),
             ctrl_p = registers.move_cursor_up(),
             ctrl_j = registers.move_cursor_down(),
             ctrl_k = registers.move_cursor_up(),
+        },
+
+        events = {
+            on_register_highlighted = registers.preview_highlighted_register({ if_mode = { "insert", "paste" } }),
         },
 
         symbols = {
@@ -211,16 +224,13 @@ end
 
 ---@mod callbacks Bindable functions
 
----`require("registers")...({...})`
----@class callback_options
----@field delay number How long, in seconds, to wait before applying the function. Default is `0`.
-
 ---`require("registers").show_window({...})`
 ---@class show_window_options
+---@field delay number How long, in seconds, to wait before applying the function. Default is `0`.
 ---@field mode register_mode? How the registers window should handle the selection of registers. Default is `"motion"`.
 
 ---Popup the registers window.
----@param options callback_options|show_window_options? Options for firing the callback.
+---@param options show_window_options? Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 ---@usage [[
 ----- Disable all key bindings
@@ -271,6 +281,12 @@ function registers.show_window(options)
     end
 end
 
+---`require("registers")...({...})`
+---@class callback_options
+---@field delay number How long, in seconds, to wait before applying the function. Default is `0`.
+---@field after function? Callback function that can be chained after the current one.
+---@field if_mode register_mode|[register_mode] Will only be triggered when the registers mode matches it. Default: `{ "paste", "insert", "motion" }`.
+
 ---Close the window.
 ---@param options callback_options? Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
@@ -283,7 +299,7 @@ end
 ---})
 ---@usage ]]
 function registers.close_window(options)
-    return registers._handle_delay_callback(options, registers._close_window)
+    return registers._handle_callback_options(options, registers._close_window)
 end
 
 ---`require("registers").apply_register({...})`
@@ -310,7 +326,7 @@ end
 ---})
 ---@usage ]]
 function registers.apply_register(options)
-    return registers._handle_delay_callback(options--[[@as callback_options]] , function(register, mode)
+    return registers._handle_callback_options(options--[[@as callback_options]] , function(register, mode)
         -- When the current line needs to be selected a window also needs to be open
         if register == nil and registers._window == nil then
             vim.api.nvim_err_writeln("registers window isn't open, can't apply register")
@@ -332,7 +348,7 @@ end
 ---@param options callback_options? Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_up(options)
-    return registers._handle_delay_callback(options, function()
+    return registers._handle_callback_options(options, function()
         if registers._window == nil then
             vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
             return
@@ -346,7 +362,7 @@ end
 ---@param options callback_options? Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_down(options)
-    return registers._handle_delay_callback(options, function()
+    return registers._handle_callback_options(options, function()
         if registers._window == nil then
             vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
             return
@@ -368,8 +384,17 @@ function registers.move_cursor_to_register(options)
         error("a register must be passed to `registers.move_cursor_to_register`")
     end
 
-    return registers._handle_delay_callback(options--[[@as callback_options]] , function()
+    return registers._handle_callback_options(options--[[@as callback_options]] , function()
         registers._move_cursor_to_register(options.register--[[@as string]] )
+    end)
+end
+
+---Show a preview of the highlighted register in the target buffer.
+---@param options callback_options Options for firing the callback.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
+function registers.preview_highlighted_register(options)
+    return registers._handle_callback_options(options--[[@as callback_options]] , function()
+        vim.api.nvim_err_writeln("bla")
     end)
 end
 
@@ -383,6 +408,9 @@ function registers._create_window()
         vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('insert')` being invoked from any mode other than insert mode")
         return
     end
+
+    -- Keep track of the buffer from which the window is called
+    registers._preview_buffer = vim.api.nvim_get_current_buf()
 
     -- Fill the registers
     registers._read_registers()
@@ -671,7 +699,7 @@ end
 ---Create a map for global key binding with a callback function.
 ---@param index string Key of the function in the `bind_keys` table.
 ---@param key string Which key to press.
----@param mode string Which mode to register the key.
+---@param mode register_mode Which mode to register the key.
 ---@private
 function registers._bind_global_key(index, key, mode)
     if registers._key_should_be_bound(index) then
@@ -971,16 +999,37 @@ end
 ---@return function callback Wrapped callback function applying the options.
 ---@nodiscard
 ---@private
-function registers._handle_delay_callback(options, cb)
+function registers._handle_callback_options(options, cb)
+    -- Process the table arguments
     local delay = (options and options.delay) or 0
+    local if_mode = (options and options.if_mode) or { "paste", "insert", "motion" }
+    -- Ensure it's always a table
+    if type(if_mode) ~= "table" then
+        if_mode = { if_mode }
+    end
+    local after = (options and options.after) or function() end
+
+    -- Create the callback that's called with all checks and events
+    local full_cb = function()
+        -- Do nothing if we are not in the proper mode
+        if not vim.tbl_contains(if_mode, registers._mode) then
+            return
+        end
+
+        -- Call the original callback
+        cb()
+
+        -- If we need to call a function after the callback also call that
+        after()
+    end
 
     if delay == 0 then
         -- Return the callback so it can be immediately called without any defer
-        return cb
+        return full_cb
     else
         return function()
             -- Sleep for delay before calling the function
-            vim.defer_fn(cb, delay * 1000)
+            vim.defer_fn(full_cb, delay * 1000)
         end
     end
 end
