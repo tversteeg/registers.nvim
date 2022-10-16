@@ -56,7 +56,7 @@ use {
         registers.setup({
 ```
 
-<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=132-189) -->
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=133-219) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 ```lua
         show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",

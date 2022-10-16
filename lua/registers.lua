@@ -36,9 +36,10 @@
 ---@field private _previous_mode string
 ---@field private _namespace string
 ---@field private _operator_count integer
----@field private _window integer?
----@field private _buffer integer?
----@field private _preview_buffer integer?
+---@field private _window? integer
+---@field private _buffer? integer
+---@field private _preview_buffer? integer
+---@field private _previous_cursor_line? integer
 ---@field private _register_values { regcontents: string, line: string, register: string, type_symbol?: string, regtype: string }[]
 ---@field private _empty_registers string[]
 ---@field private _mappings table<string, function>
@@ -72,9 +73,9 @@ local registers = {}
 ---@field normal fun()|false Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
 ---@field visual fun()|false Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
 ---@field insert fun()|false Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
----@field registers fun(register:string?,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
----@field return_key fun(register:string?,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register()`.
----@field escape fun(register:string?,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window()`.
+---@field registers? fun(register:string,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
+---@field return_key? fun(register:string,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register()`.
+---@field escape? fun(register:string,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window()`.
 ---@field ctrl_n fun()|false Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down()`.
 ---@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
 ---@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
@@ -95,83 +96,112 @@ local registers = {}
 
 ---`require("registers").setup({ window = {...} })`
 ---@class window_options
----@field max_width number? Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
----@field highlight_cursorline boolean? Whether to create key mappings for the register values inside the window. Default is `true`.
----@field border window_border? Border style of the window. Default is `"none"`.
----@field transparency integer? Transparency of the window, value can be between 0-100, 0 disables it. Default is `10`.
+---@field max_width? number Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
+---@field highlight_cursorline? boolean Whether to create key mappings for the register values inside the window. Default is `true`.
+---@field border? window_border Border style of the window. Default is `"none"`.
+---@field transparency? integer Transparency of the window, value can be between 0-100, 0 disables it. Default is `10`.
 
 ---`require("registers").setup({ symbols = {...} })`
 ---@class symbols_options
----@field newline string? Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
----@field space string? Symbol to show for a space character. Default is `" "`.
----@field tab string? Symbol to show for a tab character. Default is `"·"`.
----@field register_type_charwise string? Symbol to show next to the sign to signify that the register will be applied in a character by character way. Default is `"ᶜ"`.
----@field register_type_linewise string? Symbol to show next to the sign to signify that the register will be applied in a line by line way. Default is `"ˡ"`.
----@field register_type_blockwise string? Symbol to show next to the sign to signify that the register will be applied as a horizontal block, ignoring line endings. Default is `"ᵇ"`.
+---@field newline? string Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
+---@field space? string Symbol to show for a space character. Default is `" "`.
+---@field tab? string Symbol to show for a tab character. Default is `"·"`.
+---@field register_type_charwise? string Symbol to show next to the sign to signify that the register will be applied in a character by character way. Default is `"ᶜ"`.
+---@field register_type_linewise? string Symbol to show next to the sign to signify that the register will be applied in a line by line way. Default is `"ˡ"`.
+---@field register_type_blockwise? string Symbol to show next to the sign to signify that the register will be applied as a horizontal block, ignoring line endings. Default is `"ᵇ"`.
 
 ---`require("registers").setup({ sign_highlights = {...} })`
 ---@class sign_highlights_options
----@field cursorline string? Highlight group for when the cursor is over the line. Default is `"Visual"`.
----@field selection string? Highlight group for the selection registers, `*+`. Default is `"Constant"`.
----@field default string? Highlight group for the default register, `"`. Default is `"Function"`.
----@field unnamed string? Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
----@field read_only string? Highlight group for the read only registers, `:.%`. Default is `"Type"`.
----@field alternate_buffer string? Highlight group for the alternate buffer register, `#`. Default is `"Type"`.
----@field expression string? Highlight group for the expression register, `=`. Default is `"Exception"`.
----@field black_hole string? Highlight group for the black hole register, `_`. Default is `"Error"`.
----@field last_search string? Highlight group for the last search register, `/`. Default is `"Operator"`.
----@field delete string? Highlight group for the delete register, `-`. Default is `"Special"`.
----@field yank string? Highlight group for the yank register, `0`. Default is `"Delimiter"`.
----@field history string? Highlight group for the history registers, `1-9`. Default is `"Number"`.
----@field named string? Highlight group for the named registers, `a-z`. Default is `"Todo"`.
+---@field cursorline? string Highlight group for when the cursor is over the line. Default is `"Visual"`.
+---@field selection? string Highlight group for the selection registers, `*+`. Default is `"Constant"`.
+---@field default? string Highlight group for the default register, `"`. Default is `"Function"`.
+---@field unnamed? string Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
+---@field read_only? string Highlight group for the read only registers, `:.%`. Default is `"Type"`.
+---@field alternate_buffer? string Highlight group for the alternate buffer register, `#`. Default is `"Type"`.
+---@field expression? string Highlight group for the expression register, `=`. Default is `"Exception"`.
+---@field black_hole? string Highlight group for the black hole register, `_`. Default is `"Error"`.
+---@field last_search? string Highlight group for the last search register, `/`. Default is `"Operator"`.
+---@field delete? string Highlight group for the delete register, `-`. Default is `"Special"`.
+---@field yank? string Highlight group for the yank register, `0`. Default is `"Delimiter"`.
+---@field history? string Highlight group for the history registers, `1-9`. Default is `"Number"`.
+---@field named? string Highlight group for the named registers, `a-z`. Default is `"Todo"`.
 
 ---Get the default values for all options.
 ---@return options options Default values for all options.
 function registers.default_options()
     return {
+        -- Show these registers in the order of the string
         show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
+        -- Show a line at the bottom with registers that aren't filled
         show_empty = true,
+        -- Expose the :Registers user command
         register_user_command = true,
+        -- Always transfer all selected registers to the system clipboard
         system_clipboard = true,
+        -- Don't show whitespace at the begin and end of the register's content
         trim_whitespace = true,
+        -- Don't show registers which are exclusively filled with whitespace
         hide_only_whitespace = true,
+        -- Show a character next to the register name indicating how the register will be applied
         show_register_types = true,
 
         bind_keys = {
+            -- Show the window when pressing " in normal mode, applying the selected register as part of a motion, which is the default behavior of Neovim
             normal = registers.show_window({ mode = "motion" }),
+            -- Show the window when pressing " in visual mode, applying the selected register as part of a motion, which is the default behavior of Neovim
             visual = registers.show_window({ mode = "motion" }),
+            -- Show the window when pressing <C-R> in insert mode, inserting the selected register, which is the default behavior of Neovim
             insert = registers.show_window({ mode = "insert" }),
 
+            -- When pressing the key of a register, apply it with a very small delay, which will also highlight the selected register
             registers = registers.apply_register({ delay = 0.1 }),
+            -- Immediately apply the selected register line when pressing the return key
             return_key = registers.apply_register(),
+            -- Close the registers window when pressing the Esc key
             escape = registers.close_window(),
 
+            -- Move the cursor in the registers window down when pressing <C-N>
             ctrl_n = registers.move_cursor_down(),
+            -- Move the cursor in the registers window up when pressing <C-P>
             ctrl_p = registers.move_cursor_up(),
+            -- Move the cursor in the registers window down when pressing <C-J>
             ctrl_j = registers.move_cursor_down(),
+            -- Move the cursor in the registers window up when pressing <C-K>
             ctrl_k = registers.move_cursor_up(),
         },
 
         events = {
+            -- When a register line is highlighted, show a preview in the main buffer with how the register will be applied, but only if the register will be inserted or pasted
             on_register_highlighted = registers.preview_highlighted_register({ if_mode = { "insert", "paste" } }),
         },
 
         symbols = {
+            -- Show a special character for line breaks
             newline = "⏎",
+            -- Show space characters without changes
             space = " ",
+            -- Show a special character for tabs
             tab = "·",
+            -- The character to show when a register will be applied in a char-wise fashion
             register_type_charwise = "ᶜ",
+            -- The character to show when a register will be applied in a line-wise fashion
             register_type_linewise = "ˡ",
+            -- The character to show when a register will be applied in a block-wise fashion
             register_type_blockwise = "ᵇ",
         },
 
         window = {
+            -- The window can't be wider than 100 characters
             max_width = 100,
+            -- Show a small highlight in the sign column for the line the cursor is on
             highlight_cursorline = true,
+            -- Don't draw a border around the registers window
             border = "none",
+            -- Apply a tiny bit of transparency to the the window, letting some characters behind it bleed through
             transparency = 10,
         },
 
+        -- Highlight the sign registers as regular Neovim highlights
         sign_highlights = {
             cursorline = "Visual",
             selection = "Constant",
@@ -193,7 +223,7 @@ end
 ---Let the user configure this plugin.
 ---
 ---This will also register the default user commands and key bindings.
----@param options options? Plugin configuration options.
+---@param options? options Plugin configuration options.
 ---@usage `require("registers").setup({})`
 function registers.setup(options)
     -- Ensure that we have the proper neovim version
@@ -227,10 +257,10 @@ end
 ---`require("registers").show_window({...})`
 ---@class show_window_options
 ---@field delay number How long, in seconds, to wait before applying the function. Default is `0`.
----@field mode register_mode? How the registers window should handle the selection of registers. Default is `"motion"`.
+---@field mode? register_mode How the registers window should handle the selection of registers. Default is `"motion"`.
 
 ---Popup the registers window.
----@param options show_window_options? Options for firing the callback.
+---@param options? show_window_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 ---@usage [[
 ----- Disable all key bindings
@@ -284,11 +314,11 @@ end
 ---`require("registers")...({...})`
 ---@class callback_options
 ---@field delay number How long, in seconds, to wait before applying the function. Default is `0`.
----@field after function? Callback function that can be chained after the current one.
+---@field after? function Callback function that can be chained after the current one.
 ---@field if_mode register_mode|[register_mode] Will only be triggered when the registers mode matches it. Default: `{ "paste", "insert", "motion" }`.
 
 ---Close the window.
----@param options callback_options? Options for firing the callback.
+---@param options? callback_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 ---@usage [[
 ---require("registers").setup({
@@ -304,11 +334,11 @@ end
 
 ---`require("registers").apply_register({...})`
 ---@class apply_register_options
----@field mode register_mode? How the register should be applied. If `nil` then the mode in which the window is opened is used.
----@field keep_open_until_keypress boolean? If `true`, keep the window open until another key is pressed, only applicable when the mode is `"motion"`.
+---@field mode? register_mode How the register should be applied. If `nil` then the mode in which the window is opened is used.
+---@field keep_open_until_keypress? boolean If `true`, keep the window open until another key is pressed, only applicable when the mode is `"motion"`.
 
 ---Apply the specified register.
----@param options callback_options|apply_register_options? Options for firing the callback.
+---@param options? callback_options|apply_register_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 ---@usage [[
 ---require("registers").setup({
@@ -345,7 +375,7 @@ function registers.apply_register(options)
 end
 
 ---Move the cursor up in the window.
----@param options callback_options? Options for firing the callback.
+---@param options? callback_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_up(options)
     return registers._handle_callback_options(options, function()
@@ -359,7 +389,7 @@ function registers.move_cursor_up(options)
 end
 
 ---Move the cursor down in the window.
----@param options callback_options? Options for firing the callback.
+---@param options? callback_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.move_cursor_down(options)
     return registers._handle_callback_options(options, function()
@@ -394,7 +424,6 @@ end
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.preview_highlighted_register(options)
     return registers._handle_callback_options(options--[[@as callback_options]] , function()
-        vim.api.nvim_err_writeln("bla")
     end)
 end
 
@@ -464,11 +493,22 @@ function registers._create_window()
     registers._window = vim.api.nvim_open_win(registers._buffer, true, window_options)
 
     -- Register an autocommand to close the window if focus is lost
+    local group = vim.api.nvim_create_augroup("RegistersWindow", {})
     vim.api.nvim_create_autocmd("BufLeave", {
-        group = vim.api.nvim_create_augroup("RegistersWindow", {}),
+        group = group,
         pattern = "<buffer>",
         callback = registers._close_window,
     })
+
+    -- Register an autocommand to trigger events when the cursor moves
+    if type(registers.options.events.on_register_highlighted) == "function" then
+        registers._previous_cursor_line = nil
+        vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+            group = group,
+            buffer = registers._buffer,
+            callback = registers._cursor_moved
+        })
+    end
 
     -- Make the buffer content cut-off instead of starting on new line
     vim.api.nvim_win_set_option(registers._window, "wrap", false)
@@ -719,8 +759,8 @@ function registers._bind_global_key(index, key, mode)
 end
 
 ---Apply the register and close the window.
----@param register string? Which register to apply or the current line.
----@param keep_open_until_keypress boolean? Keep the window open until a key is pressed.
+---@param register? string Which register to apply or the current line.
+---@param keep_open_until_keypress? boolean Keep the window open until a key is pressed.
 ---@private
 function registers._apply_register(register, keep_open_until_keypress)
     -- Get the register symbol also when selecting it manually
@@ -829,6 +869,21 @@ function registers._move_cursor_to_register(register)
     end
 end
 
+---Handle the CursorMoved autocmd.
+---@private
+function registers._cursor_moved()
+    local cursor = unpack(vim.api.nvim_win_get_cursor(registers._window))
+
+    -- Skip horizontal movement
+    if registers._previous_cursor_line == cursor then
+        return
+    end
+    registers._previous_cursor_line = cursor
+
+    -- Trigger the highlight change event
+    registers.options.events.on_register_highlighted()
+end
+
 ---Register the highlights.
 ---@private
 function registers._define_highlights()
@@ -863,7 +918,7 @@ function registers._define_highlights()
     vim.api.nvim_set_hl(namespace, "RegistersEscaped", { link = "Special" })
 
     -- Empty region
-    function hl_symbol(type, symbols, group)
+    local function hl_symbol(type, symbols, group)
         local name = "RegistersSymbol_" .. group
         if type == "match" then
             vim.cmd(("syntax match %s %q contained"):format(name, symbols))
@@ -909,8 +964,8 @@ function registers._longest_register_length()
 end
 
 ---Get the register or when it's `nil` the selected register from the cursor.
----@param register string? Register to look up, if nothing is passed the current line will be used
----@return string? The register or the current line, if applicable
+---@param register? string Register to look up, if nothing is passed the current line will be used
+---@return? string The register or the current line, if applicable
 ---@nodiscard
 ---@private
 function registers._register_symbol(register)
@@ -931,8 +986,8 @@ function registers._register_symbol(register)
 end
 
 ---Get the register information matching the register.
----@param register string? Register to look up, if nothing is passed the current line will be used
----@return table? Register information from `registers._register_values`
+---@param register? string Register to look up, if nothing is passed the current line will be used
+---@return? table Register information from `registers._register_values`
 ---@private
 function registers._register_info(register)
     if register == nil then
@@ -994,7 +1049,7 @@ function registers._highlight_for_sign(register)
 end
 
 ---Handle the calling of the callback function based on the options, so things like delays can be added.
----@param options callback_options? Options to apply to the callback function.
+---@param options? callback_options Options to apply to the callback function.
 ---@param cb function Callback function to trigger.
 ---@return function callback Wrapped callback function applying the options.
 ---@nodiscard

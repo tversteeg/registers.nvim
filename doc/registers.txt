@@ -68,10 +68,13 @@ bind_keys_options                                            *bind_keys_options*
     `require("registers").setup({ bind_keys = {...} })`
 
     Fields: ~
-        {normal}     (fun()|false)  Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
-        {visual}     (fun()|false)  Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
-        {insert}     (fun()|false)  Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
-        {registers}  (fun)
+        {normal}  (fun()|false)  Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
+        {visual}  (fun()|false)  Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
+        {insert}  (fun()|false)  Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
+        {ctrl_n}  (fun()|false)  Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_p}  (fun()|false)  Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
+        {ctrl_j}  (fun()|false)  Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_k}  (fun()|false)  Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
 
 
 events_options                                                  *events_options*
@@ -96,32 +99,52 @@ window_border                                                    *window_border*
 window_options                                                  *window_options*
     `require("registers").setup({ window = {...} })`
 
-    Fields: ~
-        {max_width}  (number)
-
 
 symbols_options                                                *symbols_options*
+    @field max_width? number Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
+    @field highlight_cursorline? boolean Whether to create key mappings for the register values inside the window. Default is `true`.
+    @field border? window_border Border style of the window. Default is `"none"`.
+    @field transparency? integer Transparency of the window, value can be between 0-100, 0 disables it. Default is `10`.
     `require("registers").setup({ symbols = {...} })`
-
-    Fields: ~
-        {newline}  (string)
 
 
 sign_highlights_options                                *sign_highlights_options*
+    @field newline? string Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
+    @field space? string Symbol to show for a space character. Default is `" "`.
+    @field tab? string Symbol to show for a tab character. Default is `"·"`.
+    @field register_type_charwise? string Symbol to show next to the sign to signify that the register will be applied in a character by character way. Default is `"ᶜ"`.
+    @field register_type_linewise? string Symbol to show next to the sign to signify that the register will be applied in a line by line way. Default is `"ˡ"`.
+    @field register_type_blockwise? string Symbol to show next to the sign to signify that the register will be applied as a horizontal block, ignoring line endings. Default is `"ᵇ"`.
     `require("registers").setup({ sign_highlights = {...} })`
-
-    Fields: ~
-        {cursorline}  (string)
 
 
 registers.default_options()                          *registers.default_options*
+    @field cursorline? string Highlight group for when the cursor is over the line. Default is `"Visual"`.
+    @field selection? string Highlight group for the selection registers, `*+`. Default is `"Constant"`.
+    @field default? string Highlight group for the default register, `"`. Default is `"Function"`.
+    @field unnamed? string Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
+    @field read_only? string Highlight group for the read only registers, `:.%`. Default is `"Type"`.
+    @field alternate_buffer? string Highlight group for the alternate buffer register, `#`. Default is `"Type"`.
+    @field expression? string Highlight group for the expression register, `=`. Default is `"Exception"`.
+    @field black_hole? string Highlight group for the black hole register, `_`. Default is `"Error"`.
+    @field last_search? string Highlight group for the last search register, `/`. Default is `"Operator"`.
+    @field delete? string Highlight group for the delete register, `-`. Default is `"Special"`.
+    @field yank? string Highlight group for the yank register, `0`. Default is `"Delimiter"`.
+    @field history? string Highlight group for the history registers, `1-9`. Default is `"Number"`.
+    @field named? string Highlight group for the named registers, `a-z`. Default is `"Todo"`.
     Get the default values for all options.
 
     Returns: ~
         {options}  Default values for all options.
 
 
-registers.setup()                                              *registers.setup*
+registers.setup({options?})                                    *registers.setup*
+    Let the user configure this plugin.
+
+    This will also register the default user commands and key bindings.
+
+    Parameters: ~
+        {options?}  (options)  Plugin configuration options.
 
     Usage: ~
         >
@@ -142,11 +165,15 @@ show_window_options                                        *show_window_options*
     `require("registers").show_window({...})`
 
     Fields: ~
-        {delay}  (number)         How long, in seconds, to wait before applying the function. Default is `0`.
-        {mode}   (register_mode)
+        {delay}  (number)  How long, in seconds, to wait before applying the function. Default is `0`.
 
 
-registers.show_window()                                  *registers.show_window*
+registers.show_window({options?})                        *registers.show_window*
+    @field mode? register_mode How the registers window should handle the selection of registers. Default is `"motion"`.
+    Popup the registers window.
+
+    Parameters: ~
+        {options?}  (show_window_options)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.
@@ -179,11 +206,15 @@ callback_options                                              *callback_options*
     `require("registers")...({...})`
 
     Fields: ~
-        {delay}  (number)    How long, in seconds, to wait before applying the function. Default is `0`.
-        {after}  (function)
+        {delay}    (number)          How long, in seconds, to wait before applying the function. Default is `0`.
+        {if_mode}  (register_mode|)  @field after? function Callback function that can be chained after the current one.
 
 
-registers.close_window()                                *registers.close_window*
+registers.close_window({options?})                      *registers.close_window*
+    Close the window.
+
+    Parameters: ~
+        {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.
@@ -202,11 +233,14 @@ registers.close_window()                                *registers.close_window*
 apply_register_options                                  *apply_register_options*
     `require("registers").apply_register({...})`
 
-    Fields: ~
-        {mode}  (register_mode)
 
+registers.apply_register({options?})                  *registers.apply_register*
+    @field mode? register_mode How the register should be applied. If `nil` then the mode in which the window is opened is used.
+    @field keep_open_until_keypress? boolean If `true`, keep the window open until another key is pressed, only applicable when the mode is `"motion"`.
+    Apply the specified register.
 
-registers.apply_register()                            *registers.apply_register*
+    Parameters: ~
+        {options?}  (callback_options|apply_register_options)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.
@@ -235,13 +269,21 @@ registers._mode()                                              *registers._mode*
 registers._mode()                                              *registers._mode*
 
 
-registers.move_cursor_up()                            *registers.move_cursor_up*
+registers.move_cursor_up({options?})                  *registers.move_cursor_up*
+    Move the cursor up in the window.
+
+    Parameters: ~
+        {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.
 
 
-registers.move_cursor_down()                        *registers.move_cursor_down*
+registers.move_cursor_down({options?})              *registers.move_cursor_down*
+    Move the cursor down in the window.
+
+    Parameters: ~
+        {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.
@@ -285,6 +327,9 @@ registers._buffer()                                          *registers._buffer*
 registers._window()                                          *registers._window*
 
 
+registers._previous_cursor_line()              *registers._previous_cursor_line*
+
+
 registers._window()                                          *registers._window*
 
 
@@ -295,6 +340,9 @@ registers._empty_registers()                        *registers._empty_registers*
 
 
 registers._mappings()                                      *registers._mappings*
+
+
+registers._previous_cursor_line()              *registers._previous_cursor_line*
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
