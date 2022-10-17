@@ -39,6 +39,7 @@
 ---@field private _window? integer
 ---@field private _buffer? integer
 ---@field private _preview_buffer? integer
+---@field private _preview_window? integer
 ---@field private _previous_cursor_line? integer
 ---@field private _register_values { regcontents: string, line: string, register: string, type_symbol?: string, regtype: string }[]
 ---@field private _empty_registers string[]
@@ -73,9 +74,9 @@ local registers = {}
 ---@field normal fun()|false Function to map to " in normal mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
 ---@field visual fun()|false Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
 ---@field insert fun()|false Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
----@field registers? fun(register:string,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
----@field return_key? fun(register:string,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register()`.
----@field escape? fun(register:string,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window()`.
+---@field registers fun(register:string,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
+---@field return_key fun(register:string,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register()`.
+---@field escape fun(register:string,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window()`.
 ---@field ctrl_n fun()|false Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down()`.
 ---@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
 ---@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
@@ -424,11 +425,40 @@ end
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.preview_highlighted_register(options)
     return registers._handle_callback_options(options--[[@as callback_options]] , function()
+        -- Get the register contents for the current line as a table
+        local register_info = registers._register_info()
+
+        -- Do nothing when an invalid line is selected
+        if type(register_info) ~= "table" then
+            return
+        end
+
+        local register_lines = register_info.regcontents
+
+        -- Add the highlight to the lines
+        local lines = {}
+        for i, line in ipairs(register_lines) do
+            lines[i] = {
+                line, "Normal"
+            }
+        end
+
+        -- Clear the previous extmarks
+        vim.api.nvim_buf_clear_namespace(registers._preview_buffer, registers._namespace, 0, -1)
+
+        -- Get the cursor position of the main buffer
+        local line, col = unpack(vim.api.nvim_win_get_cursor(registers._preview_window))
+
+        -- Display the register content
+        vim.api.nvim_buf_set_extmark(registers._preview_buffer, registers._namespace, line - 1, col, {
+            virt_text = lines,
+            virt_text_win_col = col,
+        })
     end)
 end
 
----Create the window and the buffer.
 ---@private
+---Create the window and the buffer.
 function registers._create_window()
     -- Handle illegal mode combinations
     if registers._mode == "paste" and registers._previous_mode == "i" then
@@ -440,6 +470,7 @@ function registers._create_window()
 
     -- Keep track of the buffer from which the window is called
     registers._preview_buffer = vim.api.nvim_get_current_buf()
+    registers._preview_window = vim.api.nvim_get_current_win()
 
     -- Fill the registers
     registers._read_registers()
@@ -545,8 +576,8 @@ function registers._create_window()
     end
 end
 
----Close the window.
 ---@private
+---Close the window.
 function registers._close_window()
     if not registers._window then
         -- There's nothing to close
@@ -554,11 +585,17 @@ function registers._close_window()
     end
 
     vim.api.nvim_win_close(registers._window, true)
+
+    -- Clear the namespace if it's on the preview
+    if registers._preview_buffer then
+        vim.api.nvim_buf_clear_namespace(registers._preview_buffer, registers._namespace, 0, -1)
+    end
+
     registers._window = nil
 end
 
----Fill the arrays with the register values.
 ---@private
+---Fill the arrays with the register values.
 function registers._read_registers()
     registers._register_values = {}
     registers._empty_registers = {}
@@ -623,8 +660,8 @@ function registers._read_registers()
     end
 end
 
----Fill the window's buffer.
 ---@private
+---Fill the window's buffer.
 function registers._fill_window()
     -- Create an array of lines for all the registers
     local lines = {}
@@ -665,8 +702,8 @@ function registers._fill_window()
     vim.api.nvim_buf_set_option(registers._buffer, "modifiable", false)
 end
 
----Pre-fill the key mappings.
 ---@private
+---Pre-fill the key mappings.
 function registers._fill_mappings()
     -- Create the mappings to call the function specified in the options
     registers._mappings = {
@@ -697,8 +734,8 @@ function registers._fill_mappings()
     end
 end
 
----Set the key bindings for the window.
 ---@private
+---Set the key bindings for the window.
 function registers._set_bindings()
     -- Helper function for setting the keymap for all buffer modes
     local set_keymap_all_modes = function(key, callback)
@@ -736,11 +773,11 @@ function registers._set_bindings()
     end
 end
 
+---@private
 ---Create a map for global key binding with a callback function.
 ---@param index string Key of the function in the `bind_keys` table.
 ---@param key string Which key to press.
 ---@param mode register_mode Which mode to register the key.
----@private
 function registers._bind_global_key(index, key, mode)
     if registers._key_should_be_bound(index) then
         vim.api.nvim_set_keymap(mode, key, "", {
@@ -758,10 +795,10 @@ function registers._bind_global_key(index, key, mode)
     end
 end
 
+---@private
 ---Apply the register and close the window.
 ---@param register? string Which register to apply or the current line.
 ---@param keep_open_until_keypress? boolean Keep the window open until a key is pressed.
----@private
 function registers._apply_register(register, keep_open_until_keypress)
     -- Get the register symbol also when selecting it manually
     register = registers._register_symbol(register)
@@ -845,9 +882,9 @@ function registers._apply_register(register, keep_open_until_keypress)
     end
 end
 
+---@private
 ---Move the cursor to the specified register.
 ---@param register string The register to move to, if it can't be found nothing is done.
----@private
 function registers._move_cursor_to_register(register)
     if registers._window == nil then
         vim.api.nvim_err_writeln("registers window isn't open, can't move cursor")
@@ -869,8 +906,8 @@ function registers._move_cursor_to_register(register)
     end
 end
 
----Handle the CursorMoved autocmd.
 ---@private
+---Handle the CursorMoved autocmd.
 function registers._cursor_moved()
     local cursor = unpack(vim.api.nvim_win_get_cursor(registers._window))
 
@@ -884,8 +921,8 @@ function registers._cursor_moved()
     registers.options.events.on_register_highlighted()
 end
 
----Register the highlights.
 ---@private
+---Register the highlights.
 function registers._define_highlights()
     -- Set the namespace for the highlights on the window, if we're running an older neovim version make it global
     ---@type integer|string
@@ -946,10 +983,10 @@ function registers._define_highlights()
     vim.cmd([[syntax region RegistersEmpty start="^Empty: " end="$" contains=RegistersSymbol.*,RegistersEmptyString]])
 end
 
+---@private
 ---Get the length of the longest register.
 ---@return integer The length of the longest register
 ---@nodiscard
----@private
 function registers._longest_register_length()
     local longest = 0
     for i = 1, #registers._register_values do
@@ -963,11 +1000,11 @@ function registers._longest_register_length()
     return longest
 end
 
+---@private
 ---Get the register or when it's `nil` the selected register from the cursor.
 ---@param register? string Register to look up, if nothing is passed the current line will be used
 ---@return? string The register or the current line, if applicable
 ---@nodiscard
----@private
 function registers._register_symbol(register)
     if register == nil then
         -- A register is selected by the cursor, get it based on the current line
@@ -985,10 +1022,10 @@ function registers._register_symbol(register)
     end
 end
 
+---@private
 ---Get the register information matching the register.
 ---@param register? string Register to look up, if nothing is passed the current line will be used
 ---@return? table Register information from `registers._register_values`
----@private
 function registers._register_info(register)
     if register == nil then
         -- A register is selected by the cursor, get it based on the current line
@@ -1007,11 +1044,11 @@ function registers._register_info(register)
     return nil
 end
 
+---@private
 ---Whether a key should be bound.
 ---@param option string Which item from bind_keys should be checked
 ---@return boolean Whether the key should be bound
 ---@nodiscard
----@private
 function registers._key_should_be_bound(option)
     if type(registers.options.bind_keys) == "boolean" then
         return registers.options.bind_keys --[[@as boolean]]
@@ -1020,11 +1057,11 @@ function registers._key_should_be_bound(option)
     end
 end
 
+---@private
 ---The highlight group from the options for the sign.
 ---@param register string Which register to get the highlight group for
 ---@return string Highlight group
 ---@nodiscard
----@private
 function registers._highlight_for_sign(register)
     local hl = registers.options.sign_highlights
 
@@ -1048,12 +1085,12 @@ function registers._highlight_for_sign(register)
     })[register]
 end
 
+---@private
 ---Handle the calling of the callback function based on the options, so things like delays can be added.
 ---@param options? callback_options Options to apply to the callback function.
 ---@param cb function Callback function to trigger.
 ---@return function callback Wrapped callback function applying the options.
 ---@nodiscard
----@private
 function registers._handle_callback_options(options, cb)
     -- Process the table arguments
     local delay = (options and options.delay) or 0
@@ -1089,9 +1126,9 @@ function registers._handle_callback_options(options, cb)
     end
 end
 
+---@private
 ---Whether the previous mode is any of the visual selections.
 ---@return boolean is_visual Whether the previous mode is a visual selection.
----@private
 function registers._previous_mode_is_visual()
     return registers._previous_mode == 'v'
         or registers._previous_mode == '^V'
@@ -1099,8 +1136,8 @@ function registers._previous_mode_is_visual()
         or registers._previous_mode == '\22'
 end
 
----All available registers.
 ---@private
+---All available registers.
 registers._all_registers = {
     "*", "+", "\"", "-", "/", "_", "=", "#", "%", ".",
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
