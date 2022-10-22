@@ -102,45 +102,39 @@ window_border                                                    *window_border*
 window_options                                                  *window_options*
     `require("registers").setup({ window = {...} })`
 
-    Fields: ~
-        {max_width?}             (number)         Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
-        {highlight_cursorline?}  (boolean)        Whether to create key mappings for the register values inside the window. Default is `true`.
-        {border?}                (window_border)  Border style of the window. Default is `"none"`.
-        {transparency?}          (integer)        Transparency of the window, value can be between 0-100, 0 disables it. Default is `10`.
-
 
 symbols_options                                                *symbols_options*
+    @field max_width? number Maximum width of the window, normal size will be calculated based on the size of the longest register. Default is `100`.
+    @field highlight_cursorline? boolean Whether to create key mappings for the register values inside the window. Default is `true`.
+    @field border? window_border Border style of the window. Default is `"none"`.
+    @field transparency? integer Transparency of the window, value can be between 0-100, 0 disables it. Default is `10`.
     `require("registers").setup({ symbols = {...} })`
-
-    Fields: ~
-        {newline?}                  (string)  Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
-        {space?}                    (string)  Symbol to show for a space character. Default is `" "`.
-        {tab?}                      (string)  Symbol to show for a tab character. Default is `"·"`.
-        {register_type_charwise?}   (string)  Symbol to show next to the sign to signify that the register will be applied in a character by character way. Default is `"ᶜ"`.
-        {register_type_linewise?}   (string)  Symbol to show next to the sign to signify that the register will be applied in a line by line way. Default is `"ˡ"`.
-        {register_type_blockwise?}  (string)  Symbol to show next to the sign to signify that the register will be applied as a horizontal block, ignoring line endings. Default is `"ᵇ"`.
 
 
 sign_highlights_options                                *sign_highlights_options*
+    @field newline? string Symbol to show for a line break character, can not be the `"\\n"` symbol, use `"\\\\n"` (two backslashes) instead. Default is `"⏎"`.
+    @field space? string Symbol to show for a space character. Default is `" "`.
+    @field tab? string Symbol to show for a tab character. Default is `"·"`.
+    @field register_type_charwise? string Symbol to show next to the sign to signify that the register will be applied in a character by character way. Default is `"ᶜ"`.
+    @field register_type_linewise? string Symbol to show next to the sign to signify that the register will be applied in a line by line way. Default is `"ˡ"`.
+    @field register_type_blockwise? string Symbol to show next to the sign to signify that the register will be applied as a horizontal block, ignoring line endings. Default is `"ᵇ"`.
     `require("registers").setup({ sign_highlights = {...} })`
-
-    Fields: ~
-        {cursorline?}        (string)  Highlight group for when the cursor is over the line. Default is `"Visual"`.
-        {selection?}         (string)  Highlight group for the selection registers, `*+`. Default is `"Constant"`.
-        {default?}           (string)  Highlight group for the default register, `"`. Default is `"Function"`.
-        {unnamed?}           (string)  Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
-        {read_only?}         (string)  Highlight group for the read only registers, `:.%`. Default is `"Type"`.
-        {alternate_buffer?}  (string)  Highlight group for the alternate buffer register, `#`. Default is `"Type"`.
-        {expression?}        (string)  Highlight group for the expression register, `=`. Default is `"Exception"`.
-        {black_hole?}        (string)  Highlight group for the black hole register, `_`. Default is `"Error"`.
-        {last_search?}       (string)  Highlight group for the last search register, `/`. Default is `"Operator"`.
-        {delete?}            (string)  Highlight group for the delete register, `-`. Default is `"Special"`.
-        {yank?}              (string)  Highlight group for the yank register, `0`. Default is `"Delimiter"`.
-        {history?}           (string)  Highlight group for the history registers, `1-9`. Default is `"Number"`.
-        {named?}             (string)  Highlight group for the named registers, `a-z`. Default is `"Todo"`.
 
 
 registers.default_options()                          *registers.default_options*
+    @field cursorline? string Highlight group for when the cursor is over the line. Default is `"Visual"`.
+    @field selection? string Highlight group for the selection registers, `*+`. Default is `"Constant"`.
+    @field default? string Highlight group for the default register, `"`. Default is `"Function"`.
+    @field unnamed? string Highlight group for the unnamed register, `\\`. Default is `"Statement"`.
+    @field read_only? string Highlight group for the read only registers, `:.%`. Default is `"Type"`.
+    @field alternate_buffer? string Highlight group for the alternate buffer register, `#`. Default is `"Type"`.
+    @field expression? string Highlight group for the expression register, `=`. Default is `"Exception"`.
+    @field black_hole? string Highlight group for the black hole register, `_`. Default is `"Error"`.
+    @field last_search? string Highlight group for the last search register, `/`. Default is `"Operator"`.
+    @field delete? string Highlight group for the delete register, `-`. Default is `"Special"`.
+    @field yank? string Highlight group for the yank register, `0`. Default is `"Delimiter"`.
+    @field history? string Highlight group for the history registers, `1-9`. Default is `"Number"`.
+    @field named? string Highlight group for the named registers, `a-z`. Default is `"Todo"`.
     Get the default values for all options.
 
     Returns: ~
@@ -168,11 +162,11 @@ show_window_options                                        *show_window_options*
     `require("registers").show_window({...})`
 
     Fields: ~
-        {delay}  (number)         How long, in seconds, to wait before applying the function. Default is `0`.
-        {mode?}  (register_mode)  How the registers window should handle the selection of registers. Default is `"motion"`.
+        {delay}  (number)  How long, in seconds, to wait before applying the function. Default is `0`.
 
 
 registers.show_window({options?})                        *registers.show_window*
+    @field mode? register_mode How the registers window should handle the selection of registers. Default is `"motion"`.
     Popup the registers window.
 
     Parameters: ~
@@ -201,8 +195,7 @@ callback_options                                              *callback_options*
 
     Fields: ~
         {delay}    (number)          How long, in seconds, to wait before applying the function. Default is `0`.
-        {after?}   (function)        Callback function that can be chained after the current one.
-        {if_mode}  (register_mode|)
+        {if_mode}  (register_mode|)  @field after? function Callback function that can be chained after the current one.
 
 
 registers.close_window({options?})                      *registers.close_window*
@@ -228,12 +221,10 @@ registers.close_window({options?})                      *registers.close_window*
 apply_register_options                                  *apply_register_options*
     `require("registers").apply_register({...})`
 
-    Fields: ~
-        {mode?}                      (register_mode)  How the register should be applied. If `nil` then the mode in which the window is opened is used.
-        {keep_open_until_keypress?}  (boolean)        If `true`, keep the window open until another key is pressed, only applicable when the mode is `"motion"`.
-
 
 registers.apply_register({options?})                  *registers.apply_register*
+    @field mode? register_mode How the register should be applied. If `nil` then the mode in which the window is opened is used.
+    @field keep_open_until_keypress? boolean If `true`, keep the window open until another key is pressed, only applicable when the mode is `"motion"`.
     Apply the specified register.
 
     Parameters: ~
@@ -301,6 +292,7 @@ registers.move_cursor_to_register({options})
                                         *registers.preview_highlighted_register*
 registers.preview_highlighted_register({options})
     Show a preview of the highlighted register in the target buffer.
+    Currently this overlays the text, waiting for https://github.com/neovim/neovim/pull/9496 to merge.
 
     Parameters: ~
         {options}  (callback_options)  Options for firing the callback.
