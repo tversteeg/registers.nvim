@@ -15,7 +15,7 @@
 ---
 ---Keys can be bound using functions, to make it easier for use I've made all functions except `registers.setup()` return callback functions that can be configured and passed to fields in the `bind_keys` example.
 ---
----For example, to apply a delay of a second after selecting the register with it's key (for example pressing the '0' key to apply the '0' register when it's open):
+---For example, to apply a delay of a second after selecting the register with its key (for example pressing the '0' key to apply the '0' register when it's open):
 ---use {
 ---  "tversteeg/registers.nvim",
 ---  config = function()
@@ -81,7 +81,7 @@ local registers = {}
 ---@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
 ---@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
 ---@field ctrl_k fun()|false Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
---
+
 ---`require("registers").setup({ events = {...} })`
 ---@class events_options
 ---@field on_register_highlighted fun()|false Function that's called when a new register is highlighted when the window is open. Default is `registers.preview_highlighted_register({ if_mode = { "insert", "paste" } })`.
@@ -421,6 +421,7 @@ function registers.move_cursor_to_register(options)
 end
 
 ---Show a preview of the highlighted register in the target buffer.
+---Currently this overlays the text, waiting for https://github.com/neovim/neovim/pull/9496 to merge.
 ---@param options callback_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.preview_highlighted_register(options)
