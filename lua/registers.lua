@@ -30,6 +30,8 @@
 ---<
 ---@brief ]]
 
+local uv = require "luv"
+
 ---@class registers
 ---@field options options
 ---@field private _mode string
@@ -41,6 +43,8 @@
 ---@field private _preview_buffer? integer
 ---@field private _preview_window? integer
 ---@field private _previous_cursor_line? integer
+---@field private _key_interrupt_timer? userdata
+---@field private _interrupted_by? string
 ---@field private _register_values { regcontents: string, line: string, register: string, type_symbol?: string, regtype: string }[]
 ---@field private _empty_registers string[]
 ---@field private _mappings table<string, function>
@@ -282,16 +286,45 @@ function registers.show_window(options)
     })
 
     return function()
-        -- Check whether a key is pressed in between waiting for the window to open
-        local interrupted = vim.wait(options.delay * 1000, function()
-            return vim.fn.getchar(true) ~= 0
+        -- Reset the interruption check
+        registers._interrupted_by = nil
+
+        -- Do a quick check if a key is not pressed already while calling this function
+        local key = vim.fn.getchar(false)
+        if key ~= 0 then
+            registers._interrupted_by = key
+        else
+            -- Check whether a key is pressed in between waiting for the window to open
+            registers._key_interrupt_timer = uv.new_timer()
+            -- The interval of 200ms is based on the default value for vim.wait
+            registers._key_interrupt_timer:start(0, 200, function()
+                -- Schedule the function because we can't run viml functions in a libuv loop
+                vim.schedule(function()
+                    key = vim.fn.getchar(false)
+                    if key ~= 0 then
+                        -- Stop the timer
+                        if registers._key_interrupt_timer then
+                            registers._key_interrupt_timer:close()
+                            registers._key_interrupt_timer = nil
+                        end
+
+                        -- Set the interrupted boolean so the creation of the window can be cancelled
+                        registers._interrupted_by = key
+                    end
+                end)
+            end)
+        end
+
+        -- Wait for the delay, this will also add a tiny interval for processing key combinations
+        vim.wait(options.delay * 1000, function()
+            return registers._interrupted_by ~= nil
         end, nil, false)
 
         -- Mode before opening the popup window
         registers._previous_mode = vim.api.nvim_get_mode().mode
 
         -- Open the window when another key hasn't been pressed in the meantime
-        if not interrupted then
+        if registers._interrupted_by == nil then
             -- Keep track of the count that's used to invoke the window so it can be applied again
             registers._operator_count = vim.api.nvim_get_vvar("count")
 
@@ -303,10 +336,11 @@ function registers.show_window(options)
             vim.schedule(function() registers._create_window() end)
         else
             -- While in a motion mode is shown simulate the pressing of the key depending on the mode
+            local charstr = vim.fn.nr2char(registers._interrupted_by)
             if registers._previous_mode == 'n' or registers._previous_mode == 'v' then
-                return "\""
+                return "\"" .. charstr
             else
-                return vim.api.nvim_replace_termcodes("<C-R>", true, true, true)
+                return vim.api.nvim_replace_termcodes("<C-R>", true, true, true) .. charstr
             end
         end
     end
@@ -461,6 +495,11 @@ end
 ---@private
 ---Create the window and the buffer.
 function registers._create_window()
+    -- Stop when the window is interrupted
+    if registers._is_interrupted() then
+        return
+    end
+
     -- Handle illegal mode combinations
     if registers._mode == "paste" and registers._previous_mode == "i" then
         vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('paste')` being invoked from insert mode")
@@ -479,14 +518,17 @@ function registers._create_window()
     -- Create the buffer the registers will be written to
     registers._buffer = vim.api.nvim_create_buf(false, true)
 
-    -- Apply the key bindings to the buffer
-    registers._set_bindings()
-
     -- Remove the buffer when the window is closed
     vim.api.nvim_buf_set_option(registers._buffer, "bufhidden", "wipe")
 
     -- Set the filetype
     vim.api.nvim_buf_set_option(registers._buffer, "filetype", "registers")
+
+    -- Stop when the window is interrupted
+    if registers._is_interrupted() then
+        registers._close_window()
+        return
+    end
 
     -- The width is based on the longest line, but it will be truncated if the max width is supplied and is longer
     local window_width
@@ -566,10 +608,21 @@ function registers._create_window()
     -- Update the buffer
     registers._fill_window()
 
+    -- Apply the key bindings to the buffer
+    registers._set_bindings()
+
+    -- Stop when the window is interrupted
+    if registers._is_interrupted() then
+        registers._close_window()
+        return
+    end
+
+    -- The creation of the window can't be interrupted at this point because the keys are already bound
+    registers._key_interrupt_timer:close()
+    registers._key_interrupt_timer = nil
+
     -- Ensure the window shows up
     vim.cmd("redraw!")
-
-    -- Weird workaround for when using a count, the window won't draw
 
     -- Put the window in normal mode when using a visual selection
     if registers._previous_mode_is_visual() then
@@ -578,21 +631,39 @@ function registers._create_window()
 end
 
 ---@private
----Close the window.
-function registers._close_window()
-    if not registers._window then
-        -- There's nothing to close
-        return
+---Whether the opening of the registers window is interrupted by a keypress.
+---Also handles the pressing of the proper key when that's the case.
+---@return boolean is_interrupted Whether to handle the case where a key is pressed.
+function registers._is_interrupted()
+    if registers._interrupted_by == nil then
+        return false
     end
 
-    vim.api.nvim_win_close(registers._window, true)
+    -- Press the key that's interrupted again
+    vim.api.nvim_feedkeys(registers._interrupted_by, "n", true)
+
+    return true
+end
+
+---@private
+---Close the window.
+function registers._close_window()
+    -- Close the window, this should also close the buffer
+    if registers._window then
+        vim.api.nvim_win_close(registers._window, true)
+        registers._window = nil
+    end
+
+    -- But if the buffer is created and interrupted before the window is opened this won't happen
+    if registers._buffer then
+        vim.api.nvim_buf_delete(registers._buffer, { force = true })
+        registers._buffer = nil
+    end
 
     -- Clear the namespace if it's on the preview
     if registers._preview_buffer then
         vim.api.nvim_buf_clear_namespace(registers._preview_buffer, registers._namespace, 0, -1)
     end
-
-    registers._window = nil
 end
 
 ---@private

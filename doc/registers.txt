@@ -287,6 +287,7 @@ move_cursor_to_register_options                *move_cursor_to_register_options*
         {register}  (string)  Which register to move the cursor to.
 
 
+                                             *registers.move_cursor_to_register*
 registers.move_cursor_to_register({options})
     Move the cursor to the specified register.
 
@@ -297,6 +298,7 @@ registers.move_cursor_to_register({options})
         {function}  Function that can be used to pass to configuration options with callbacks.
 
 
+                                        *registers.preview_highlighted_register*
 registers.preview_highlighted_register({options})
     Show a preview of the highlighted register in the target buffer.
     Currently this overlays the text, waiting for https://github.com/neovim/neovim/pull/9496 to merge.
