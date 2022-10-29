@@ -682,8 +682,7 @@ function registers._read_registers()
         local register_info = vim.fn.getreginfo(register)
 
         -- Ignore empty registers
-        if register_info.regcontents and type(register_info.regcontents) == "table" and register_info.regcontents[1] and
-            #register_info.regcontents[1] > 0 then
+        if register_info.regcontents and type(register_info.regcontents) == "table" and register_info.regcontents[1] then
             register_info.register = register
 
             -- The register contents as a single line
