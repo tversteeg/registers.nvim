@@ -686,7 +686,7 @@ function registers._read_registers()
             register_info.register = register
 
             -- The register contents as a single line
-            local line = table.concat(register_info.regcontents, registers.options.symbols.newline)
+            local line = table.concat(register_info.regcontents, "\n")
             local hide = false
             -- Check whether the register should be hidden due to being empty
             if line and registers.options.hide_only_whitespace then
