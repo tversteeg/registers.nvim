@@ -702,8 +702,13 @@ function registers._read_registers()
                     line = line:match("^%s*(.-)%s*$")
                 end
 
-                -- Replace newline characters
-                line = line:gsub("[\n\r]", registers.options.symbols.newline)
+                line = line
+                    -- Replace newline characters (win)
+                    :gsub("\r\n", registers.options.symbols.newline)
+                    -- Replace newline characters (unix)
+                    :gsub("\n", registers.options.symbols.newline)
+                    -- Replace newline characters (mac)
+                    :gsub("\r", registers.options.symbols.newline)
                     -- Replace tab characters
                     :gsub("\t", registers.options.symbols.tab)
                     -- Replace space characters
