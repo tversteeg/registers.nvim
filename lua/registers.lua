@@ -253,7 +253,7 @@ function registers.setup(options)
 
     -- Bind the keys if applicable
     registers._bind_global_key("normal", "\"", "n")
-    registers._bind_global_key("visual", "\"", "v")
+    registers._bind_global_key("visual", "\"", "x")
     registers._bind_global_key("insert", "<C-R>", "i")
 end
 
@@ -824,7 +824,7 @@ function registers._set_bindings()
 
         vim.api.nvim_buf_set_keymap(registers._buffer, "n", key, '', map_options)
         vim.api.nvim_buf_set_keymap(registers._buffer, "i", key, '', map_options)
-        vim.api.nvim_buf_set_keymap(registers._buffer, "v", key, '', map_options)
+        vim.api.nvim_buf_set_keymap(registers._buffer, "x", key, '', map_options)
     end
 
     -- Map all keys
