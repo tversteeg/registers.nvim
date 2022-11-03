@@ -72,12 +72,14 @@ bind_keys_options                                            *bind_keys_options*
         {visual}      (fun()|false)                              Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
         {insert}      (fun()|false)                              Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
         {registers}   (fun(register:string,mode:register_mode))  Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
-        {return_key}  (fun(register:string,mode:register_mode))  Function to map to <CR> in the window. Default is `registers.apply_register()`.
-        {escape}      (fun(register:string,mode:register_mode))  Function to map to <ESC> in the window. Default is `registers.close_window()`.
-        {ctrl_n}      (fun()|false)                              Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down()`.
-        {ctrl_p}      (fun()|false)                              Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
-        {ctrl_j}      (fun()|false)                              Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
-        {ctrl_k}      (fun()|false)                              Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
+        {return_key}  (fun(register:string,mode:register_mode))  Function to map to <CR> in the registers window. Default is `registers.apply_register()`.
+        {escape}      (fun(register:string,mode:register_mode))  Function to map to <ESC> in the registers window. Default is `registers.close_window()`.
+        {ctrl_n}      (fun()|false)                              Function to map <C-N> in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_p}      (fun()|false)                              Function to map <C-P> in the registers window. Default is `registers.move_cursor_up()`.
+        {ctrl_j}      (fun()|false)                              Function to map <C-J> in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_k}      (fun()|false)                              Function to map <C-K> in the registers window. Default is `registers.move_cursor_up()`.
+        {delete}      (fun()|false)                              Function to map <DEL> in the registers window. Default is `registers.clear_highlighted_register()`.
+        {backspace}   (fun()|false)                              Function to map <BS> in the registers window. Default is `registers.clear_highlighted_register()`.
 
 
 events_options                                                  *events_options*
@@ -303,6 +305,16 @@ registers.preview_highlighted_register({options})
 
     Parameters: ~
         {options}  (callback_options)  Options for firing the callback.
+
+    Returns: ~
+        {function}  Function that can be used to pass to configuration options with callbacks.
+
+
+registers.clear_highlighted_register({options?})
+    Empty the register on which the cursor resides in the window.
+
+    Parameters: ~
+        {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
         {function}  Function that can be used to pass to configuration options with callbacks.
