@@ -97,6 +97,10 @@ use {
             ctrl_j = registers.move_cursor_down(),
             -- Move the cursor in the registers window up when pressing <C-K>
             ctrl_k = registers.move_cursor_up(),
+            -- Clear the register of the highlighted line when pressing <DEL>
+            delete = registers.clear_highlighted_register(),
+            -- Clear the register of the highlighted line when pressing <BS>
+            backspace = registers.clear_highlighted_register(),
         },
 
         events = {
