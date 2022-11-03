@@ -20,6 +20,7 @@ jobs:
       - name: embed codeblocks
         uses: dineshsonachalam/markdown-autodocs@v1.0.7
         with:
+          commit_message: "doc: auto-generate markdown codeblock"
           output_file_paths: '[./README.md]'
           categories: '[code-block]'
 
@@ -27,5 +28,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           branch: ${{ github.head_ref }}
-          commit_message: "Auto-generate vimdoc"
+          commit_message: "doc: auto-generate vimdoc"
           file_pattern: doc/*.txt

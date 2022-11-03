@@ -79,12 +79,14 @@ local registers = {}
 ---@field visual fun()|false Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
 ---@field insert fun()|false Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
 ---@field registers fun(register:string,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
----@field return_key fun(register:string,mode:register_mode) Function to map to <CR> in the window. Default is `registers.apply_register()`.
----@field escape fun(register:string,mode:register_mode) Function to map to <ESC> in the window. Default is `registers.close_window()`.
----@field ctrl_n fun()|false Function to map <C-N> to move down in the registers window. Default is `registers.move_cursor_down()`.
----@field ctrl_p fun()|false Function to map <C-P> to move up in the registers window. Default is `registers.move_cursor_up()`.
----@field ctrl_j fun()|false Function to map <C-J> to move down in the registers window. Default is `registers.move_cursor_down()`.
----@field ctrl_k fun()|false Function to map <C-K> to move up in the registers window. Default is `registers.move_cursor_up()`.
+---@field return_key fun(register:string,mode:register_mode) Function to map to <CR> in the registers window. Default is `registers.apply_register()`.
+---@field escape fun(register:string,mode:register_mode) Function to map to <ESC> in the registers window. Default is `registers.close_window()`.
+---@field ctrl_n fun()|false Function to map <C-N> in the registers window. Default is `registers.move_cursor_down()`.
+---@field ctrl_p fun()|false Function to map <C-P> in the registers window. Default is `registers.move_cursor_up()`.
+---@field ctrl_j fun()|false Function to map <C-J> in the registers window. Default is `registers.move_cursor_down()`.
+---@field ctrl_k fun()|false Function to map <C-K> in the registers window. Default is `registers.move_cursor_up()`.
+---@field delete fun()|false Function to map <DEL> in the registers window. Default is `registers.clear_highlighted_register()`.
+---@field backspace fun()|false Function to map <BS> in the registers window. Default is `registers.clear_highlighted_register()`.
 
 ---`require("registers").setup({ events = {...} })`
 ---@class events_options
@@ -173,6 +175,10 @@ function registers.default_options()
             ctrl_j = registers.move_cursor_down(),
             -- Move the cursor in the registers window up when pressing <C-K>
             ctrl_k = registers.move_cursor_up(),
+            -- Clear the register of the highlighted line when pressing <DEL>
+            delete = registers.clear_highlighted_register(),
+            -- Clear the register of the highlighted line when pressing <BS>
+            backspace = registers.clear_highlighted_register(),
         },
 
         events = {
@@ -492,6 +498,30 @@ function registers.preview_highlighted_register(options)
     end)
 end
 
+---Empty the register on which the cursor resides in the window.
+---@param options? callback_options Options for firing the callback.
+---@return function callback Function that can be used to pass to configuration options with callbacks.
+function registers.clear_highlighted_register(options)
+    return registers._handle_callback_options(options--[[@as callback_options]] , function()
+        -- Get the register contents for the current line as a table
+        local register_info = registers._register_info()
+
+        -- Do nothing when an invalid line is selected
+        if type(register_info) ~= "table" then
+            return
+        end
+
+        -- Clear the register
+        vim.fn.setreg(register_info.register, '')
+
+        -- Fill the registers again
+        registers._read_registers()
+
+        -- Update the buffer
+        registers._fill_window()
+    end)
+end
+
 ---@private
 ---Create the window and the buffer.
 function registers._create_window()
@@ -739,6 +769,9 @@ end
 ---@private
 ---Fill the window's buffer.
 function registers._fill_window()
+    -- Don't allow the buffer to be modified
+    vim.api.nvim_buf_set_option(registers._buffer, "modifiable", true)
+
     -- Create an array of lines for all the registers
     local lines = {}
     for i = 1, #registers._register_values do
@@ -785,6 +818,8 @@ function registers._fill_mappings()
     registers._mappings = {
         ["<CR>"] = function() registers.options.bind_keys.return_key(nil, registers._mode) end,
         ["<ESC>"] = function() registers.options.bind_keys.escape(nil, registers._mode) end,
+        ["<DEL>"] = function() registers.options.bind_keys.delete(nil, registers._mode) end,
+        ["<BS>"] = function() registers.options.bind_keys.backspace(nil, registers._mode) end,
     }
 
     -- Create mappings for the register keys if applicable
