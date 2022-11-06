@@ -1213,14 +1213,14 @@ function registers._handle_callback_options(options, cb)
     local after = (options and options.after) or function() end
 
     -- Create the callback that's called with all checks and events
-    local full_cb = function()
+    local full_cb = function(...)
         -- Do nothing if we are not in the proper mode
         if not vim.tbl_contains(if_mode, registers._mode) then
             return
         end
 
         -- Call the original callback
-        cb()
+        cb(...)
 
         -- If we need to call a function after the callback also call that
         after()
@@ -1230,9 +1230,12 @@ function registers._handle_callback_options(options, cb)
         -- Return the callback so it can be immediately called without any defer
         return full_cb
     else
-        return function()
+        return function(...)
+            -- Pass the arguments to the function
+            local args = { ... }
+
             -- Sleep for delay before calling the function
-            vim.defer_fn(full_cb, delay * 1000)
+            vim.defer_fn(function() full_cb(unpack(args)) end, delay * 1000)
         end
     end
 end
