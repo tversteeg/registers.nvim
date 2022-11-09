@@ -56,7 +56,6 @@ local registers = {}
 ---@class options
 ---@field show string Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
 ---@field show_empty boolean Show the registers which aren't filled in a separate line. Default is `true`.
----@field preview boolean Show the how the highlighted register will be applied in the target buffer. Default is `true`.
 ---@field register_user_command boolean Whether to register the `:Registers` user command. Default is `true`.
 ---@field system_clipboard boolean Transfer selected register to the system clipboard. Default is `true`.
 ---@field trim_whitespace boolean Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.

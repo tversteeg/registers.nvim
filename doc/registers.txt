@@ -43,7 +43,6 @@ options                                                                *options*
     Fields: ~
         {show}                   (string)                     Which registers to show and in what order. Default is `"*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:"`.
         {show_empty}             (boolean)                    Show the registers which aren't filled in a separate line. Default is `true`.
-        {preview}                (boolean)                    Show the how the highlighted register will be applied in the target buffer. Default is `true`.
         {register_user_command}  (boolean)                    Whether to register the `:Registers` user command. Default is `true`.
         {system_clipboard}       (boolean)                    Transfer selected register to the system clipboard. Default is `true`.
         {trim_whitespace}        (boolean)                    Don't show whitespace at the begin and and of the registers, won't change the output from applying the register. Default is `true`.
@@ -289,6 +288,7 @@ move_cursor_to_register_options                *move_cursor_to_register_options*
         {register}  (string)  Which register to move the cursor to.
 
 
+                                             *registers.move_cursor_to_register*
 registers.move_cursor_to_register({options})
     Move the cursor to the specified register.
 
@@ -299,6 +299,7 @@ registers.move_cursor_to_register({options})
         {function}  Function that can be used to pass to configuration options with callbacks.
 
 
+                                        *registers.preview_highlighted_register*
 registers.preview_highlighted_register({options})
     Show a preview of the highlighted register in the target buffer.
     Currently this overlays the text, waiting for https://github.com/neovim/neovim/pull/9496 to merge.
@@ -310,6 +311,7 @@ registers.preview_highlighted_register({options})
         {function}  Function that can be used to pass to configuration options with callbacks.
 
 
+                                          *registers.clear_highlighted_register*
 registers.clear_highlighted_register({options?})
     Empty the register on which the cursor resides in the window.
 

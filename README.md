@@ -56,7 +56,7 @@ use {
         registers.setup({
 ```
 
-<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=140-230) -->
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=139-229) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 ```lua
         -- Show these registers in the order of the string
