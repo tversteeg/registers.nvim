@@ -824,7 +824,8 @@ function registers._fill_mappings()
     -- Create mappings for the register keys if applicable
     if registers.options.bind_keys then
         for _, register in ipairs(registers._all_registers) do
-            local register_func = function()
+            -- Pressing the character of a register will also apply it
+            registers._mappings[register] = function()
                 -- Always move the cursor to the selected line in case there's a delay, unfortunately there's no way to know if that's the case at this time so it's quite inefficient when there's no delay
                 registers._move_cursor_to_register(register)
 
@@ -833,12 +834,16 @@ function registers._fill_mappings()
                 registers.options.bind_keys.registers(register, registers._mode)
             end
 
-            -- Pressing the character of a register will also apply it
-            registers._mappings[register] = register_func
-
             -- Also map uppercase registers if applicable
             if register:upper() ~= register then
-                registers._mappings[register:upper()] = register_func
+                registers._mappings[register:upper()] = function()
+                    -- Always move the cursor to the selected line in case there's a delay, unfortunately there's no way to know if that's the case at this time so it's quite inefficient when there's no delay
+                    registers._move_cursor_to_register(register)
+
+
+                    -- Apply the mapping
+                    registers.options.bind_keys.registers(register:upper(), registers._mode)
+                end
             end
         end
     end
