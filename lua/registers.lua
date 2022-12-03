@@ -1048,12 +1048,12 @@ function registers._define_highlights()
     end
 
     -- Define the matches and link them
-    vim.cmd([[syntax match RegistersNumber "\d\+"]])
-    vim.cmd([[syntax match RegistersNumber "[-+]\d\+\.\d\+"]])
+    -- vim.cmd([[syntax match RegistersNumber "\d\+"]])
+    vim.cmd([[syntax match RegistersNumber "[-+]\?\d\+\.\?\d*"]])
     vim.api.nvim_set_hl(namespace, "RegistersNumber", { link = "Number" })
 
-    vim.cmd([[syntax region RegistersString start=+"+ skip=+\\"+ end=+"+]])
-    vim.cmd([[syntax region RegistersString start=+'+ skip=+\\'+ end=+'+]])
+    vim.cmd([[syntax region RegistersString start=+"+ skip=+\\"+ end=+"+ oneline]])
+    vim.cmd([[syntax region RegistersString start=+'+ skip=+\\'+ end=+'+ oneline]])
     vim.api.nvim_set_hl(namespace, "RegistersString", { link = "String" })
 
     -- ⏎
