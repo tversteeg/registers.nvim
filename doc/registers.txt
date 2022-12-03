@@ -145,7 +145,7 @@ registers.default_options()                          *registers.default_options*
     Get the default values for all options.
 
     Returns: ~
-        {options}  Default values for all options.
+        (options)  Default values for all options.
 
 
 registers.setup({options?})                                    *registers.setup*
@@ -180,7 +180,7 @@ registers.show_window({options?})                        *registers.show_window*
         {options?}  (show_window_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
     Usage: ~
         >
@@ -213,7 +213,7 @@ registers.close_window({options?})                      *registers.close_window*
         {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
     Usage: ~
         >
@@ -241,7 +241,7 @@ registers.apply_register({options?})                  *registers.apply_register*
         {options?}  (callback_options|apply_register_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
     Usage: ~
         >
@@ -268,7 +268,7 @@ registers.move_cursor_up({options?})                  *registers.move_cursor_up*
         {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
 
 registers.move_cursor_down({options?})              *registers.move_cursor_down*
@@ -278,7 +278,7 @@ registers.move_cursor_down({options?})              *registers.move_cursor_down*
         {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
 
 move_cursor_to_register_options                *move_cursor_to_register_options*
@@ -288,6 +288,7 @@ move_cursor_to_register_options                *move_cursor_to_register_options*
         {register}  (string)  Which register to move the cursor to.
 
 
+                                             *registers.move_cursor_to_register*
 registers.move_cursor_to_register({options})
     Move the cursor to the specified register.
 
@@ -295,9 +296,10 @@ registers.move_cursor_to_register({options})
         {options}  (callback_options|move_cursor_to_register_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
 
+                                        *registers.preview_highlighted_register*
 registers.preview_highlighted_register({options})
     Show a preview of the highlighted register in the target buffer.
     Currently this overlays the text, waiting for https://github.com/neovim/neovim/pull/9496 to merge.
@@ -306,9 +308,10 @@ registers.preview_highlighted_register({options})
         {options}  (callback_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
 
+                                          *registers.clear_highlighted_register*
 registers.clear_highlighted_register({options?})
     Empty the register on which the cursor resides in the window.
 
@@ -316,7 +319,7 @@ registers.clear_highlighted_register({options?})
         {options?}  (callback_options)  Options for firing the callback.
 
     Returns: ~
-        {function}  Function that can be used to pass to configuration options with callbacks.
+        (function)  Function that can be used to pass to configuration options with callbacks.
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
