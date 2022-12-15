@@ -898,7 +898,7 @@ function registers._bind_global_key(index, key, mode)
         vim.api.nvim_set_keymap(mode, key, "", {
             callback = function()
                 -- Don't open the registers window in a telescope prompt or in a non-modifiable buffer
-                if not vim.bo.modifiable or vim.bo.filetype == "TelescopePrompt" then
+                if not vim.bo.modifiable or vim.bo.filetype == "TelescopePrompt" or vim.bo.filetype == "DressingInput" then
                     return vim.api.nvim_replace_termcodes(key, true, true, true)
                 else
                     -- Call the callback function passed to the options
