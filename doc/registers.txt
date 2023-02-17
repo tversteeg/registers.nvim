@@ -34,7 +34,7 @@ registers                                                            *registers*
         {options}  (options)
 
 
-================================================================================
+==============================================================================
 `registers.setup` configuration options.                                 *setup*
 
 options                                                                *options*
@@ -97,7 +97,7 @@ window_border                                                    *window_border*
         ("rounded")
         ("solid")
         ("shadow")
-        (string[])   An array of eight strings which each corner and side character.
+        ("string[]")  An array of eight strings which each corner and side character.
 
 
 window_options                                                  *window_options*
@@ -157,12 +157,12 @@ registers.setup({options?})                                    *registers.setup*
         {options?}  (options)  Plugin configuration options.
 
     Usage: ~
-        >
-            require("registers").setup({})
-        <
+>lua
+        require("registers").setup({})
+<
 
 
-================================================================================
+==============================================================================
 Bindable functions                                                   *callbacks*
 
 show_window_options                                        *show_window_options*
@@ -183,18 +183,18 @@ registers.show_window({options?})                        *registers.show_window*
         (function)  Function that can be used to pass to configuration options with callbacks.
 
     Usage: ~
-        >
-            -- Disable all key bindings
-            require("registers").setup({ bind_keys = false })
+>lua
+        -- Disable all key bindings
+        require("registers").setup({ bind_keys = false })
 
-            -- Define a custom for opening the register window when pressing "r"
-            vim.api.nvim_set_keymap("n", "r", "", {
-                -- The "paste" argument means that when a register is selected it will automatically be pasted
-                callback = require("registers").show_window({ mode = "paste" }),
-                -- This is required for the registers window to function
-                expr = true
-            })
-        <
+        -- Define a custom for opening the register window when pressing "r"
+        vim.api.nvim_set_keymap("n", "r", "", {
+            -- The "paste" argument means that when a register is selected it will automatically be pasted
+            callback = require("registers").show_window({ mode = "paste" }),
+            -- This is required for the registers window to function
+            expr = true
+        })
+<
 
 
 callback_options                                              *callback_options*
@@ -216,14 +216,14 @@ registers.close_window({options?})                      *registers.close_window*
         (function)  Function that can be used to pass to configuration options with callbacks.
 
     Usage: ~
-        >
-            require("registers").setup({
-                bind_keys = {
-                    -- Don't apply the register when selecting with Enter but close the window
-                    return_key = require("registers").close_window(),
-                }
-            })
-        <
+>lua
+        require("registers").setup({
+            bind_keys = {
+                -- Don't apply the register when selecting with Enter but close the window
+                return_key = require("registers").close_window(),
+            }
+        })
+<
 
 
 apply_register_options                                  *apply_register_options*
@@ -244,21 +244,21 @@ registers.apply_register({options?})                  *registers.apply_register*
         (function)  Function that can be used to pass to configuration options with callbacks.
 
     Usage: ~
-        >
-            require("registers").setup({
-                bind_keys = {
-                    -- Always paste the register when selecting with Enter
-                    return_key = require("registers").apply_register({ mode = "paste" }),
-                }
-            })
+>lua
+        require("registers").setup({
+            bind_keys = {
+                -- Always paste the register when selecting with Enter
+                return_key = require("registers").apply_register({ mode = "paste" }),
+            }
+        })
 
-            require("registers").setup({
-                bind_keys = {
-                    -- When pressing a key of the register, wait for another key press before closing the window
-                    registers = require("registers").apply_register({ keep_open_until_keypress = true }),
-                }
-            })
-        <
+        require("registers").setup({
+            bind_keys = {
+                -- When pressing a key of the register, wait for another key press before closing the window
+                registers = require("registers").apply_register({ keep_open_until_keypress = true }),
+            }
+        })
+<
 
 
 registers.move_cursor_up({options?})                  *registers.move_cursor_up*
