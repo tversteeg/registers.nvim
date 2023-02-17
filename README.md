@@ -41,6 +41,22 @@ use {
 }
 ```
 
+### Lazy.nvim
+
+This configuration lazy-loads the plugin only when it's invoked.
+
+```lua
+{
+	"tversteeg/registers.nvim",
+	name = "registers",
+	keys = {
+		{ "\"",    mode = { "n", "v" } },
+		{ "<C-R>", mode = "i" }
+	},
+	cmd = "Registers",
+}
+```
+
 ## Configuration
 
 This plugin can be configured by passing a table to `require("registers").setup({})`.

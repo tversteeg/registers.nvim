@@ -41,3 +41,6 @@ luac.out
 
 # Neovim documentation tags
 doc/tags
+
+# Lua config
+.luarc.json
