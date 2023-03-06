@@ -78,14 +78,15 @@ local registers = {}
 ---@field visual fun()|false Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
 ---@field insert fun()|false Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
 ---@field registers fun(register:string,mode:register_mode) Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
----@field return_key fun(register:string,mode:register_mode) Function to map to <CR> in the registers window. Default is `registers.apply_register()`.
----@field escape fun(register:string,mode:register_mode) Function to map to <ESC> in the registers window. Default is `registers.close_window()`.
----@field ctrl_n fun()|false Function to map <C-N> in the registers window. Default is `registers.move_cursor_down()`.
----@field ctrl_p fun()|false Function to map <C-P> in the registers window. Default is `registers.move_cursor_up()`.
----@field ctrl_j fun()|false Function to map <C-J> in the registers window. Default is `registers.move_cursor_down()`.
----@field ctrl_k fun()|false Function to map <C-K> in the registers window. Default is `registers.move_cursor_up()`.
----@field delete fun()|false Function to map <DEL> in the registers window. Default is `registers.clear_highlighted_register()`.
----@field backspace fun()|false Function to map <BS> in the registers window. Default is `registers.clear_highlighted_register()`.
+---@field [string] fun()|false Function to map to the custom key binding in the registers window.
+---@field return_key fun(register:string,mode:register_mode) Deprecated, function to map to <CR> in the registers window. Default is `registers.apply_register()`.
+---@field escape fun(register:string,mode:register_mode) Deprecated, function to map to <ESC> in the registers window. Default is `registers.close_window()`.
+---@field ctrl_n fun()|false Deprecated, function to map <C-N> in the registers window. Default is `registers.move_cursor_down()`.
+---@field ctrl_p fun()|false Deprecated, function to map <C-P> in the registers window. Default is `registers.move_cursor_up()`.
+---@field ctrl_j fun()|false Deprecated, function to map <C-J> in the registers window. Default is `registers.move_cursor_down()`.
+---@field ctrl_k fun()|false Deprecated, function to map <C-K> in the registers window. Default is `registers.move_cursor_up()`.
+---@field delete fun()|false Deprecated, function to map <DEL> in the registers window. Default is `registers.clear_highlighted_register()`.
+---@field backspace fun()|false Deprecated, function to map <BS> in the registers window. Default is `registers.clear_highlighted_register()`.
 
 ---`require("registers").setup({ events = {...} })`
 ---@class events_options
@@ -150,41 +151,38 @@ function registers.default_options()
         hide_only_whitespace = true,
         -- Show a character next to the register name indicating how the register will be applied
         show_register_types = true,
-
         bind_keys = {
             -- Show the window when pressing " in normal mode, applying the selected register as part of a motion, which is the default behavior of Neovim
-            normal = registers.show_window({ mode = "motion" }),
+            normal    = registers.show_window({ mode = "motion" }),
             -- Show the window when pressing " in visual mode, applying the selected register as part of a motion, which is the default behavior of Neovim
-            visual = registers.show_window({ mode = "motion" }),
+            visual    = registers.show_window({ mode = "motion" }),
             -- Show the window when pressing <C-R> in insert mode, inserting the selected register, which is the default behavior of Neovim
-            insert = registers.show_window({ mode = "insert" }),
+            insert    = registers.show_window({ mode = "insert" }),
 
             -- When pressing the key of a register, apply it with a very small delay, which will also highlight the selected register
             registers = registers.apply_register({ delay = 0.1 }),
             -- Immediately apply the selected register line when pressing the return key
-            return_key = registers.apply_register(),
+            ["<CR>"]  = registers.apply_register(),
             -- Close the registers window when pressing the Esc key
-            escape = registers.close_window(),
+            ["<Esc>"] = registers.close_window(),
 
-            -- Move the cursor in the registers window down when pressing <C-N>
-            ctrl_n = registers.move_cursor_down(),
-            -- Move the cursor in the registers window up when pressing <C-P>
-            ctrl_p = registers.move_cursor_up(),
-            -- Move the cursor in the registers window down when pressing <C-J>
-            ctrl_j = registers.move_cursor_down(),
-            -- Move the cursor in the registers window up when pressing <C-K>
-            ctrl_k = registers.move_cursor_up(),
-            -- Clear the register of the highlighted line when pressing <DEL>
-            delete = registers.clear_highlighted_register(),
+            -- Move the cursor in the registers window down when pressing <C-n>
+            ["<C-n>"] = registers.move_cursor_down(),
+            -- Move the cursor in the registers window up when pressing <C-p>
+            ["<C-p>"] = registers.move_cursor_up(),
+            -- Move the cursor in the registers window down when pressing <C-j>
+            ["<C-j>"] = registers.move_cursor_down(),
+            -- Move the cursor in the registers window up when pressing <C-k>
+            ["<C-k>"] = registers.move_cursor_up(),
+            -- Clear the register of the highlighted line when pressing <DeL>
+            ["<Del>"] = registers.clear_highlighted_register(),
             -- Clear the register of the highlighted line when pressing <BS>
-            backspace = registers.clear_highlighted_register(),
+            ["<BS>"]  = registers.clear_highlighted_register(),
         },
-
         events = {
             -- When a register line is highlighted, show a preview in the main buffer with how the register will be applied, but only if the register will be inserted or pasted
             on_register_highlighted = registers.preview_highlighted_register({ if_mode = { "insert", "paste" } }),
         },
-
         symbols = {
             -- Show a special character for line breaks
             newline = "⏎",
@@ -199,7 +197,6 @@ function registers.default_options()
             -- The character to show when a register will be applied in a block-wise fashion
             register_type_blockwise = "ᵇ",
         },
-
         window = {
             -- The window can't be wider than 100 characters
             max_width = 100,
@@ -210,7 +207,6 @@ function registers.default_options()
             -- Apply a tiny bit of transparency to the the window, letting some characters behind it bleed through
             transparency = 10,
         },
-
         -- Highlight the sign registers as regular Neovim highlights
         sign_highlights = {
             cursorline = "Visual",
@@ -364,7 +360,7 @@ end
 ---require("registers").setup({
 ---    bind_keys = {
 ---        -- Don't apply the register when selecting with Enter but close the window
----        return_key = require("registers").close_window(),
+---        ["<CR>"] = require("registers").close_window(),
 ---    }
 ---})
 ---@usage ]]
@@ -384,7 +380,7 @@ end
 ---require("registers").setup({
 ---    bind_keys = {
 ---        -- Always paste the register when selecting with Enter
----        return_key = require("registers").apply_register({ mode = "paste" }),
+---        ["<CR>"] = require("registers").apply_register({ mode = "paste" }),
 ---    }
 ---})
 ---
@@ -396,7 +392,7 @@ end
 ---})
 ---@usage ]]
 function registers.apply_register(options)
-    return registers._handle_callback_options(options--[[@as callback_options]] , function(register, mode)
+    return registers._handle_callback_options(options --[[@as callback_options]], function(register, mode)
         -- When the current line needs to be selected a window also needs to be open
         if register == nil and registers._window == nil then
             vim.api.nvim_err_writeln("registers window isn't open, can't apply register")
@@ -454,8 +450,8 @@ function registers.move_cursor_to_register(options)
         error("a register must be passed to `registers.move_cursor_to_register`")
     end
 
-    return registers._handle_callback_options(options--[[@as callback_options]] , function()
-        registers._move_cursor_to_register(options.register--[[@as string]] )
+    return registers._handle_callback_options(options --[[@as callback_options]], function()
+        registers._move_cursor_to_register(options.register --[[@as string]])
     end)
 end
 
@@ -464,7 +460,7 @@ end
 ---@param options callback_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.preview_highlighted_register(options)
-    return registers._handle_callback_options(options--[[@as callback_options]] , function()
+    return registers._handle_callback_options(options --[[@as callback_options]], function()
         -- Get the register contents for the current line as a table
         local register_info = registers._register_info()
 
@@ -501,7 +497,7 @@ end
 ---@param options? callback_options Options for firing the callback.
 ---@return function callback Function that can be used to pass to configuration options with callbacks.
 function registers.clear_highlighted_register(options)
-    return registers._handle_callback_options(options--[[@as callback_options]] , function()
+    return registers._handle_callback_options(options --[[@as callback_options]], function()
         -- Get the register contents for the current line as a table
         local register_info = registers._register_info()
 
@@ -531,9 +527,11 @@ function registers._create_window()
 
     -- Handle illegal mode combinations
     if registers._mode == "paste" and registers._previous_mode == "i" then
-        vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('paste')` being invoked from insert mode")
+        vim.api.nvim_err_writeln(
+            "registers.nvim doesn't support `registers.show_window('paste')` being invoked from insert mode")
     elseif registers._mode == "insert" and registers._previous_mode ~= "i" and registers._previous_mode ~= "c" then
-        vim.api.nvim_err_writeln("registers.nvim doesn't support `registers.show_window('insert')` being invoked from any mode other than insert mode")
+        vim.api.nvim_err_writeln(
+            "registers.nvim doesn't support `registers.show_window('insert')` being invoked from any mode other than insert mode")
         return
     end
 
@@ -563,7 +561,6 @@ function registers._create_window()
     local window_width
     if registers.options.window.max_width > 0 then
         window_width = math.min(registers.options.window.max_width, registers._longest_register_length())
-
     else
         -- There is no max width supplied so use the longest registers length as the window size
         window_width = math.min(registers._longest_register_length())
@@ -821,29 +818,56 @@ function registers._fill_mappings()
         ["<BS>"] = function() registers.options.bind_keys.backspace(nil, registers._mode) end,
     }
 
-    -- Create mappings for the register keys if applicable
-    if registers.options.bind_keys then
-        for _, register in ipairs(registers._all_registers) do
-            -- Pressing the character of a register will also apply it
-            registers._mappings[register] = function()
+    --  Don't map the keys when `false` is passed to bind_keys
+    if not registers.options.bind_keys then
+        return
+    end
+
+    -- Add the other user-defined keys to the map
+    local reserved_keys = {
+        normal = true,
+        visual = true,
+        insert = true,
+        registers = true,
+        return_key = true,
+        escape = true,
+        ctrl_n = true,
+        ctrl_p = true,
+        ctrl_j = true,
+        ctrl_k = true,
+        delete = true,
+        backspace = true,
+    }
+    for key, func in pairs(registers.options.bind_keys) do
+        -- Don't bind the reserved keys, that doesn't make any sense
+        if not reserved_keys[key] then
+            registers._mappings[key] = function()
+                registers.options.bind_keys[key](nil, registers._mode)
+            end
+        end
+    end
+
+    -- Create mappings for the register keys
+    for _, register in ipairs(registers._all_registers) do
+        -- Pressing the character of a register will also apply it
+        registers._mappings[register] = function()
+            -- Always move the cursor to the selected line in case there's a delay, unfortunately there's no way to know if that's the case at this time so it's quite inefficient when there's no delay
+            registers._move_cursor_to_register(register)
+
+
+            -- Apply the mapping
+            registers.options.bind_keys.registers(register, registers._mode)
+        end
+
+        -- Also map uppercase registers if applicable
+        if register:upper() ~= register then
+            registers._mappings[register:upper()] = function()
                 -- Always move the cursor to the selected line in case there's a delay, unfortunately there's no way to know if that's the case at this time so it's quite inefficient when there's no delay
                 registers._move_cursor_to_register(register)
 
 
                 -- Apply the mapping
-                registers.options.bind_keys.registers(register, registers._mode)
-            end
-
-            -- Also map uppercase registers if applicable
-            if register:upper() ~= register then
-                registers._mappings[register:upper()] = function()
-                    -- Always move the cursor to the selected line in case there's a delay, unfortunately there's no way to know if that's the case at this time so it's quite inefficient when there's no delay
-                    registers._move_cursor_to_register(register)
-
-
-                    -- Apply the mapping
-                    registers.options.bind_keys.registers(register:upper(), registers._mode)
-                end
+                registers.options.bind_keys.registers(register:upper(), registers._mode)
             end
         end
     end
@@ -866,7 +890,7 @@ function registers._set_bindings()
         vim.api.nvim_buf_set_keymap(registers._buffer, "x", key, '', map_options)
     end
 
-    -- Map all keys
+    -- Map all register keys
     if registers._key_should_be_bound("registers") then
         for key, callback in pairs(registers._mappings) do
             set_keymap_all_modes(key, callback)
@@ -1181,23 +1205,23 @@ function registers._highlight_for_sign(register)
     local hl = registers.options.sign_highlights
 
     return ({
-        ["*"] = hl.selection, ["+"] = hl.selection,
-        ["\""] = hl.default,
-        ["\\"] = hl.unnamed,
-        [":"] = hl.read_only, ["."] = hl.read_only, ["%"] = hl.read_only,
-        ["/"] = hl.last_search,
-        ["-"] = hl.delete,
-        ["_"] = hl.black_hole,
-        ["="] = hl.expression,
-        ["#"] = hl.alternate_buffer,
-        ["0"] = hl.yank,
-        ["1"] = hl.history, ["2"] = hl.history, ["3"] = hl.history, ["4"] = hl.history, ["5"] = hl.history,
-        ["6"] = hl.history, ["7"] = hl.history, ["8"] = hl.history, ["9"] = hl.history,
-        a = hl.named, b = hl.named, c = hl.named, d = hl.named, e = hl.named, f = hl.named, g = hl.named, h = hl.named,
-        i = hl.named, j = hl.named, k = hl.named, l = hl.named, m = hl.named, n = hl.named, o = hl.named, p = hl.named,
-        q = hl.named, r = hl.named, s = hl.named, t = hl.named, u = hl.named, v = hl.named, w = hl.named, x = hl.named,
-        y = hl.named, z = hl.named,
-    })[register]
+            ["*"] = hl.selection,["+"] = hl.selection,
+            ["\""] = hl.default,
+            ["\\"] = hl.unnamed,
+            [":"] = hl.read_only,["."] = hl.read_only,["%"] = hl.read_only,
+            ["/"] = hl.last_search,
+            ["-"] = hl.delete,
+            ["_"] = hl.black_hole,
+            ["="] = hl.expression,
+            ["#"] = hl.alternate_buffer,
+            ["0"] = hl.yank,
+            ["1"] = hl.history,["2"] = hl.history,["3"] = hl.history,["4"] = hl.history,["5"] = hl.history,
+            ["6"] = hl.history,["7"] = hl.history,["8"] = hl.history,["9"] = hl.history,
+            a = hl.named, b = hl.named, c = hl.named, d = hl.named, e = hl.named, f = hl.named, g = hl.named, h = hl.named,
+            i = hl.named, j = hl.named, k = hl.named, l = hl.named, m = hl.named, n = hl.named, o = hl.named, p = hl.named,
+            q = hl.named, r = hl.named, s = hl.named, t = hl.named, u = hl.named, v = hl.named, w = hl.named, x = hl.named,
+            y = hl.named, z = hl.named,
+        })[register]
 end
 
 ---@private
@@ -1214,7 +1238,8 @@ function registers._handle_callback_options(options, cb)
     if type(if_mode) ~= "table" then
         if_mode = { if_mode }
     end
-    local after = (options and options.after) or function() end
+    local after = (options and options.after) or function()
+        end
 
     -- Create the callback that's called with all checks and events
     local full_cb = function(...)
