@@ -810,14 +810,6 @@ end
 ---@private
 ---Pre-fill the key mappings.
 function registers._fill_mappings()
-    -- Create the mappings to call the function specified in the options
-    registers._mappings = {
-        ["<CR>"] = function() registers.options.bind_keys.return_key(nil, registers._mode) end,
-        ["<ESC>"] = function() registers.options.bind_keys.escape(nil, registers._mode) end,
-        ["<DEL>"] = function() registers.options.bind_keys.delete(nil, registers._mode) end,
-        ["<BS>"] = function() registers.options.bind_keys.backspace(nil, registers._mode) end,
-    }
-
     --  Don't map the keys when `false` is passed to bind_keys
     if not registers.options.bind_keys then
         return
@@ -838,11 +830,14 @@ function registers._fill_mappings()
         delete = true,
         backspace = true,
     }
+
+    -- Create the mappings to call the function specified in the options
+    registers._mappings = {}
     for key, func in pairs(registers.options.bind_keys) do
         -- Don't bind the reserved keys, that doesn't make any sense
         if not reserved_keys[key] then
             registers._mappings[key] = function()
-                registers.options.bind_keys[key](nil, registers._mode)
+                func(nil, registers._mode)
             end
         end
     end
