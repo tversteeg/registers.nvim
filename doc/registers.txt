@@ -71,14 +71,15 @@ bind_keys_options                                            *bind_keys_options*
         {visual}      (fun()|false)                              Function to map to " in visual mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "motion" })`.
         {insert}      (fun()|false)                              Function to map to <C-R> in insert mode to display the registers window, `false` to disable the binding. Default is `registers.show_window({ mode = "insert" })`.
         {registers}   (fun(register:string,mode:register_mode))  Function to map to the register selected by pressing it's key. Default is `registers.apply_register()`.
-        {return_key}  (fun(register:string,mode:register_mode))  Function to map to <CR> in the registers window. Default is `registers.apply_register()`.
-        {escape}      (fun(register:string,mode:register_mode))  Function to map to <ESC> in the registers window. Default is `registers.close_window()`.
-        {ctrl_n}      (fun()|false)                              Function to map <C-N> in the registers window. Default is `registers.move_cursor_down()`.
-        {ctrl_p}      (fun()|false)                              Function to map <C-P> in the registers window. Default is `registers.move_cursor_up()`.
-        {ctrl_j}      (fun()|false)                              Function to map <C-J> in the registers window. Default is `registers.move_cursor_down()`.
-        {ctrl_k}      (fun()|false)                              Function to map <C-K> in the registers window. Default is `registers.move_cursor_up()`.
-        {delete}      (fun()|false)                              Function to map <DEL> in the registers window. Default is `registers.clear_highlighted_register()`.
-        {backspace}   (fun()|false)                              Function to map <BS> in the registers window. Default is `registers.clear_highlighted_register()`.
+        {return_key}  (fun(register:string,mode:register_mode))  Deprecated, function to map to <CR> in the registers window. Default is `registers.apply_register()`.
+                                                                 @field [string] fun()|false Function to map to the custom key binding in the registers window.
+        {escape}      (fun(register:string,mode:register_mode))  Deprecated, function to map to <ESC> in the registers window. Default is `registers.close_window()`.
+        {ctrl_n}      (fun()|false)                              Deprecated, function to map <C-N> in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_p}      (fun()|false)                              Deprecated, function to map <C-P> in the registers window. Default is `registers.move_cursor_up()`.
+        {ctrl_j}      (fun()|false)                              Deprecated, function to map <C-J> in the registers window. Default is `registers.move_cursor_down()`.
+        {ctrl_k}      (fun()|false)                              Deprecated, function to map <C-K> in the registers window. Default is `registers.move_cursor_up()`.
+        {delete}      (fun()|false)                              Deprecated, function to map <DEL> in the registers window. Default is `registers.clear_highlighted_register()`.
+        {backspace}   (fun()|false)                              Deprecated, function to map <BS> in the registers window. Default is `registers.clear_highlighted_register()`.
 
 
 events_options                                                  *events_options*
@@ -220,7 +221,7 @@ registers.close_window({options?})                      *registers.close_window*
         require("registers").setup({
             bind_keys = {
                 -- Don't apply the register when selecting with Enter but close the window
-                return_key = require("registers").close_window(),
+                ["<CR>"] = require("registers").close_window(),
             }
         })
 <
@@ -248,7 +249,7 @@ registers.apply_register({options?})                  *registers.apply_register*
         require("registers").setup({
             bind_keys = {
                 -- Always paste the register when selecting with Enter
-                return_key = require("registers").apply_register({ mode = "paste" }),
+                ["<CR>"] = require("registers").apply_register({ mode = "paste" }),
             }
         })
 
