@@ -72,8 +72,9 @@ use {
         registers.setup({
 ```
 
-<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=140-224) -->
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./lua/registers.lua&lines=140-227) -->
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
+
 ```lua
         -- Show these registers in the order of the string
         show = "*+\"-/_=#%.0123456789abcdefghijklmnopqrstuvwxyz:",
@@ -147,6 +148,8 @@ use {
         },
         -- Highlight the sign registers as regular Neovim highlights
         sign_highlights = {
+            cursorlinesign = "CursorLine",
+            signcolumn = "NormalFloat",
             cursorline = "Visual",
             selection = "Constant",
             default = "Function",
@@ -161,6 +164,7 @@ use {
             history = "Number",
             named = "Todo",
 ```
+
 <!-- The below code snippet is automatically added from ./lua/registers.lua -->
 <!-- MARKDOWN-AUTO-DOCS:END -->
 

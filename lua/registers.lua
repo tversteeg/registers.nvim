@@ -209,6 +209,8 @@ function registers.default_options()
         },
         -- Highlight the sign registers as regular Neovim highlights
         sign_highlights = {
+            cursorlinesign = "CursorLine",
+            signcolumn = "NormalFloat",
             cursorline = "Visual",
             selection = "Constant",
             default = "Function",
@@ -1075,6 +1077,11 @@ function registers._define_highlights()
     vim.cmd([[syntax region RegistersString start=+'+ skip=+\\'+ end=+'+ oneline]])
     vim.api.nvim_set_hl(namespace, "RegistersString", { link = "String" })
 
+    -- space between register symbol and contents
+    vim.api.nvim_set_hl(namespace, "RegistersSignColumn", { link = "NormalFloat" })
+    -- space between register symbol and contents but for only current line
+    vim.api.nvim_set_hl(namespace, "RegistersStringCursorLineSign", { link = "CursorLine" })
+
     -- ⏎
     vim.cmd([[syntax match RegistersWhitespace "\%u23CE"]])
     -- ⎵
@@ -1098,6 +1105,9 @@ function registers._define_highlights()
         end
         vim.api.nvim_set_hl(namespace, name, { link = registers.options.sign_highlights[group] })
     end
+
+    vim.api.nvim_set_hl(namespace, "SignColumn", { link = registers.options.sign_highlights["signcolumn"] })
+    vim.api.nvim_set_hl(namespace, "CursorLineSign", { link = registers.options.sign_highlights["cursorlinesign"] })
 
     hl_symbol("match", "[*+]", "selection")
     hl_symbol("match", "\\\"", "default")
