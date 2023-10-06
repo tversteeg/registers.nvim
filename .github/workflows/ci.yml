@@ -25,7 +25,7 @@ jobs:
           categories: '[code-block]'
 
       - name: commit help
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           branch: ${{ github.head_ref }}
           commit_message: "doc: auto-generate vimdoc"
