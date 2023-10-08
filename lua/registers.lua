@@ -210,7 +210,7 @@ function registers.default_options()
         -- Highlight the sign registers as regular Neovim highlights
         sign_highlights = {
             cursorlinesign = "CursorLine",
-            signcolumn = "NormalFloat",
+            signcolumn = "SignColumn",
             cursorline = "Visual",
             selection = "Constant",
             default = "Function",
@@ -1078,7 +1078,7 @@ function registers._define_highlights()
     vim.api.nvim_set_hl(namespace, "RegistersString", { link = "String" })
 
     -- space between register symbol and contents
-    vim.api.nvim_set_hl(namespace, "RegistersSignColumn", { link = "NormalFloat" })
+    vim.api.nvim_set_hl(namespace, "RegistersSignColumn", { link = "SignColumn" })
     -- space between register symbol and contents but for only current line
     vim.api.nvim_set_hl(namespace, "RegistersStringCursorLineSign", { link = "CursorLine" })
 
