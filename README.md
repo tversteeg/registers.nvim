@@ -148,7 +148,7 @@ use {
         -- Highlight the sign registers as regular Neovim highlights
         sign_highlights = {
             cursorlinesign = "CursorLine",
-            signcolumn = "NormalFloat",
+            signcolumn = "SignColumn",
             cursorline = "Visual",
             selection = "Constant",
             default = "Function",
