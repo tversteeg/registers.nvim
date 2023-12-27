@@ -2,6 +2,9 @@
 
 Show register content when you try to access it in Neovim. Written in Lua.
 
+> [!WARNING]
+> This plugin is not maintained actively by me anymore. Any pull requests will still be reviewed and merged but I'm not fixing any bugs or adding features myself. If someone is interested in taking over maintainership please contact me!
+
 Requires Neovim 0.7.0+.
 
 ## Features

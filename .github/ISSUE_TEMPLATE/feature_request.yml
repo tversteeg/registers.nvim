@@ -26,7 +26,6 @@ body:
       label: Is this a feature you are interested in implementing yourself?
       options:
         - 'Yes'
-        - 'Maybe'
-        - 'No'
+        - 'No and I understand that this plugin is currently not maintained, so this feature will probably not be implemented anytime soon'
     validations:
       required: true
