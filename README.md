@@ -56,13 +56,11 @@ One can also call the `registers.nvim` pop-up through other means, not just <kbd
 - Now type the `Name` of the register item you want to select, as listed in the output of `:reg`.
 - Now perform the desired action (usually either yanking, <kbd>y</kbd>, or pasting, <kbd>p</kbd>)
 
-## Using `registers.nvim` is definitely more aesthetically pleasing and probably makes registers easier for beginners to understand—but is it actually better for experienced neovim users, too?
+### Using `registers.nvim` is definitely more aesthetically pleasing and probably makes registers easier for beginners to understand—but is it actually better for experienced neovim users, too?
 
-Well, users say:
+[Well, users say ;)](https://github.com/tversteeg/registers.nvim/issues/102#issuecomment-1870503908)…
 
 > I definitely think so. I use registers (and tmux buffers) extensively, and remembering a register’s name that I arbitrarily chose half an hour ago is not always the easiest for me. This means that I usually end up typing <kbd>"</kbd>, then realizing that I don’t know what to type next, opening `:reg`, finding the register I want (usually a quite difficult task), *trying* to remember its name, typing <kbd>"</kbd> *again*, forgetting the register’s name *again*, going back to `:reg`, and finally: typing <kbd>"</kbd><kbd>\<register name\></kbd>. This costs an excessive amount of time. `registers.nvim` has solved this problem for me because it previews the contents of a register, removing the need to remember arbitrary register names. In other words, I love the plugin :)
-
-* * *
 
 ## Install
 
@@ -79,7 +77,7 @@ use {
 
 ### Lazy.nvim
 
-This configuration lazy-loads the plugin only when it's invoked.
+This configuration lazy-loads the plugin only when it’s invoked.
 
 ```lua
 {
