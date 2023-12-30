@@ -7,6 +7,10 @@ Show register content when you try to access it in Neovim. Written in Lua.
 
 Requires Neovim 0.7.0+.
 
+## Summary
+
+This plugin adds an interactive and visually pleasing UI for *selecting* what register item to paste or use next. It offers basic syntax highlighting, a preview, and an equally (if not more) efficient experience using Neovim registers. One simply uses <kbd>"</kbd> or <kbd>Ctrl</kbd><kbd>R</kbd> as one would normally, and then enjoys the benefit of seeing the contents of all filled registers *without having to use the `:reg` command beforehand*. It essentially removes an annoying step in using Neovim registers (checking where a specific item is, which register you might have used earlier, etc.), and lets you increase your efficiency while also increasing Neovim’s aesthetic.
+
 ## Features
 
 - Non-obtrusive, won't influence your workflow
@@ -15,7 +19,7 @@ Requires Neovim 0.7.0+.
 
 ## Use
 
-The popup window showing the registers and their values can be opened in one of the following ways:
+The pop-up window showing the registers and their values can be opened in one of the following ways:
 
 - Call `:Registers`
 - Press <kbd>"</kbd> in _normal_ or _visual_ mode
@@ -29,7 +33,34 @@ Empty registers are not shown by default.
 
 Use the <kbd>Up</kbd> and <kbd>Down</kbd> or <kbd>Ctrl</kbd><kbd>P</kbd> and <kbd>Ctrl</kbd><kbd>N</kbd> or <kbd>Ctrl</kbd><kbd>J</kbd> and <kbd>Ctrl</kbd><kbd>K</kbd> keys to select the register you want to use and press <kbd>Enter</kbd> to apply it, or type the register you want to apply, which is one of the following:
 
-<kbd>"</kbd> <kbd>0</kbd>-<kbd>9</kbd> <kbd>a</kbd>-<kbd>z</kbd> <kbd>:</kbd> <kbd>.</kbd> <kbd>%</kbd> <kbd>#</kbd> <kbd>=</kbd> <kbd>\*</kbd> <kbd>+</kbd> <kbd>\_</kbd> <kbd>/</kbd>
+<kbd>"</kbd> <kbd>0</kbd>–<kbd>9</kbd> <kbd>a</kbd>–<kbd>z</kbd> <kbd>:</kbd> <kbd>.</kbd> <kbd>%</kbd> <kbd>#</kbd> <kbd>=</kbd> <kbd>\*</kbd> <kbd>+</kbd> <kbd>\_</kbd> <kbd>/</kbd>
+
+## Example Workflow
+
+### With `registers.nvim`:
+
+- Copy item to system clipboard or Neovim register (this can also be achieved using `registers.nvim`);
+- In normal mode, type the <kbd>"</kbd> key. The `registers.nvim` pop-up will appear.
+- You can now use the arrow keys (or other navigation keys) to move to a specific item (representing an item in the Neovim register, i.e., what you see with `:reg`) in the list being displayed. Pressing enter on this item will ‘select’ it.
+- Alternatively, you can just type the highlighted character being displayed in the left margin of the pop-up, next to the register item you want to select. This resembles a workflow without `registers.nvim`, except that you get the visual feedback and confirmation of what is inside the register beforehand. It is also useful for remembering which register you placed something in ;) .
+    + I.e., type <kbd>"</kbd><kbd>+</kbd> to select from the system clipboard, **or** use the arrow keys to navigate to <kbd>+</kbd> and hit enter)
+- Once you have selected a register item, you can proceed to perform your desired action (e.g., yank, paste, etc.). To do this, simply use the usual keys: <kbd>y</kbd>, <kbd>p</kbd>, etc.
+
+One can also call the `registers.nvim` pop-up through other means, not just <kbd>"</kbd>. For example, in insert mode, one can use <kbd>Ctrl</kbd><kbd>R</kbd> (this is default vim behaviour). If one does not want to use these key-binds (or bind your own keys), one can use the `:Registers` command.
+
+### Without `registers.nvim`:
+
+- Copy item to system clipboard or vim register;
+- Use the `:reg` command to view registers. Make sure to remember the `Name` of the register item you want to use for future reference.
+- In normal mode, type <kbd>"</kbd>. You will get no visual feedback.
+- Now type the `Name` of the register item you want to select, as listed in the output of `:reg`.
+- Now perform the desired action (usually either yanking, <kbd>y</kbd>, or pasting, <kbd>p</kbd>)
+
+### Using `registers.nvim` is definitely more aesthetically pleasing and probably makes registers easier for beginners to understand—but is it actually better for experienced Neovim users, too?
+
+[Well, users say ;)](https://github.com/tversteeg/registers.nvim/issues/102#issuecomment-1870503908)…
+
+> I definitely think so. I use registers (and tmux buffers) extensively, and remembering a register’s name that I arbitrarily chose half an hour ago is not always the easiest for me. This means that I usually end up typing <kbd>"</kbd>, then realizing that I don’t know what to type next, opening `:reg`, finding the register I want (usually a quite difficult task), *trying* to remember its name, typing <kbd>"</kbd> *again*, forgetting the register’s name *again*, going back to `:reg`, and finally: typing <kbd>"</kbd><kbd>\<register name\></kbd>. This costs an excessive amount of time. `registers.nvim` has solved this problem for me because it previews the contents of a register, removing the need to remember arbitrary register names. In other words, I love the plugin :)
 
 ## Install
 
@@ -46,24 +77,25 @@ use {
 
 ### Lazy.nvim
 
-This configuration lazy-loads the plugin only when it's invoked.
+This configuration lazy-loads the plugin only when it’s invoked.
 
 ```lua
 {
 	"tversteeg/registers.nvim",
-	name = "registers",
+	cmd = "Registers",
+	config = true,
 	keys = {
 		{ "\"",    mode = { "n", "v" } },
 		{ "<C-R>", mode = "i" }
 	},
-	cmd = "Registers",
+	name = "registers",
 }
 ```
 
 ## Configuration
 
 This plugin can be configured by passing a table to `require("registers").setup({})`.
-Configuration options can be found in Neovim's documentation after installing with: [`:h registers`](doc/registers.txt).
+Configuration options can be found in Neovim’s documentation after installing with: [`:h registers`](doc/registers.txt).
 
 ### Default Values
 
