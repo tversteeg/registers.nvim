@@ -9,7 +9,7 @@ Requires Neovim 0.7.0+.
 
 ## Summary
 
-This plugin adds an interactive and visually pleasing UI for *selecting* what register item to paste or use next. It offers basic syntax highlighting, a preview, and an equally (if not more) efficient experience using vim registers. One simply uses <kbd>"</kbd> or <kbd>Ctrl</kbd><kbd>R</kbd> as one would normally, and then enjoys the benefit of seeing the contents of all filled registers *without having to use the `:reg` command beforehand*. It essentially removes an annoying step in using vim registers (checking where a specific item is, which register you might have used earlier, etc.), and lets you increase your efficiency while also increasing vim’s aesthetic.
+This plugin adds an interactive and visually pleasing UI for *selecting* what register item to paste or use next. It offers basic syntax highlighting, a preview, and an equally (if not more) efficient experience using Neovim registers. One simply uses <kbd>"</kbd> or <kbd>Ctrl</kbd><kbd>R</kbd> as one would normally, and then enjoys the benefit of seeing the contents of all filled registers *without having to use the `:reg` command beforehand*. It essentially removes an annoying step in using Neovim registers (checking where a specific item is, which register you might have used earlier, etc.), and lets you increase your efficiency while also increasing Neovim’s aesthetic.
 
 ## Features
 
@@ -39,9 +39,9 @@ Use the <kbd>Up</kbd> and <kbd>Down</kbd> or <kbd>Ctrl</kbd><kbd>P</kbd> and <kb
 
 ### With `registers.nvim`:
 
-- Copy item to system clipboard or vim register (this can also be achieved using `registers.nvim`);
+- Copy item to system clipboard or Neovim register (this can also be achieved using `registers.nvim`);
 - In normal mode, type the <kbd>"</kbd> key. The `registers.nvim` pop-up will appear.
-- You can now use the arrow keys (or other navigation keys) to move to a specific item (representing an item in the vim register, i.e., what you see with `:reg`) in the list being displayed. Pressing enter on this item will ‘select’ it.
+- You can now use the arrow keys (or other navigation keys) to move to a specific item (representing an item in the Neovim register, i.e., what you see with `:reg`) in the list being displayed. Pressing enter on this item will ‘select’ it.
 - Alternatively, you can just type the highlighted character being displayed in the left margin of the pop-up, next to the register item you want to select. This resembles a workflow without `registers.nvim`, except that you get the visual feedback and confirmation of what is inside the register beforehand. It is also useful for remembering which register you placed something in ;) .
     + I.e., type <kbd>"</kbd><kbd>+</kbd> to select from the system clipboard, **or** use the arrow keys to navigate to <kbd>+</kbd> and hit enter)
 - Once you have selected a register item, you can proceed to perform your desired action (e.g., yank, paste, etc.). To do this, simply use the usual keys: <kbd>y</kbd>, <kbd>p</kbd>, etc.
@@ -56,7 +56,7 @@ One can also call the `registers.nvim` pop-up through other means, not just <kbd
 - Now type the `Name` of the register item you want to select, as listed in the output of `:reg`.
 - Now perform the desired action (usually either yanking, <kbd>y</kbd>, or pasting, <kbd>p</kbd>)
 
-### Using `registers.nvim` is definitely more aesthetically pleasing and probably makes registers easier for beginners to understand—but is it actually better for experienced neovim users, too?
+### Using `registers.nvim` is definitely more aesthetically pleasing and probably makes registers easier for beginners to understand—but is it actually better for experienced Neovim users, too?
 
 [Well, users say ;)](https://github.com/tversteeg/registers.nvim/issues/102#issuecomment-1870503908)…
 
@@ -83,7 +83,7 @@ This configuration lazy-loads the plugin only when it’s invoked.
 {
 	"tversteeg/registers.nvim",
 	cmd = "Registers",
-    config = true,
+	config = true,
 	keys = {
 		{ "\"",    mode = { "n", "v" } },
 		{ "<C-R>", mode = "i" }
