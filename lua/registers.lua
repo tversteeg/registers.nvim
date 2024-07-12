@@ -292,6 +292,12 @@ function registers.show_window(options)
         -- Reset the interruption check
         registers._interrupted_by = nil
 
+        -- Reset the one-time keystroke guard
+        registers._has_determined_register = false
+
+        -- Keeps subsequent non-register keys that are pressed before the window closes
+        registers._keys_to_press_at_the_very_end = ""
+
         -- Do a quick check if a key is not pressed already while calling this function
         local key = vim.fn.getchar(false)
         if key ~= 0 then
@@ -944,6 +950,14 @@ function registers._apply_register(register, keep_open_until_keypress)
         return
     end
 
+    -- Do nothing if a key press has already been sent
+    if registers._has_determined_register then
+        registers._keys_to_press_at_the_very_end = registers._keys_to_press_at_the_very_end .. register
+        return
+    end
+
+    registers._has_determined_register = true
+
     local key_to_press_at_the_end
     if registers._mode == "paste" then
         -- "Press" the 'p' key at the end so the selected register gets pasted
@@ -1003,6 +1017,9 @@ function registers._apply_register(register, keep_open_until_keypress)
             if key_to_press_at_the_end then
                 keys = keys .. key_to_press_at_the_end
             end
+
+            -- Any other keys that were pressed
+            keys = keys .. registers._keys_to_press_at_the_very_end
 
             vim.api.nvim_feedkeys(keys, "n", true)
         end)
